@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ArrowLeft, FileText, Edit, History, Users, Plus, Trash2, FileSpreadsheet, CheckCircle } from 'lucide-react'
+import { ArrowLeft, FileText, Edit, History, Users, Plus, Trash2, FileSpreadsheet, CheckCircle, Edit2, Check, X } from 'lucide-react'
 import { Card } from '../components/ui/Card'
 import { Modal } from '../components/ui/Modal'
 import { Input } from '../components/ui/Input'
@@ -9,7 +9,7 @@ import { useData } from '../contexts/DataContext'
 import { useAuth } from '../contexts/AuthContext'
 import { ACTIVITY_TAGS } from '../constants'
 import { useParams } from 'react-router-dom'
-import { useProject, useProjectContributors, useAddContributor, useRemoveContributor, useProjectStatus } from '../hooks/useProjects'
+import { useProject, useProjectContributors, useAddContributor, useRemoveContributor, useProjectStatus, useUpdateProject } from '../hooks/useProjects'
 import { userService, checkinService } from '../services/api'
 import { UserRole } from '../types/auth.types'
 
@@ -78,6 +78,11 @@ export const ProjectDetailScreen = ({
   const { user, isAdmin } = useAuth()
   const { checkins, updateCheckin, refreshData } = useData()
   const [editingCheckin, setEditingCheckin] = useState<Checkin | null>(null)
+
+  // Renaming Logic
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [tempTitle, setTempTitle] = useState('')
+  const updateProject = useUpdateProject()
   
   const { id } = useParams<{ id: string }>()
   const { data: fetchedProject, isLoading, error } = useProject(id || '')
@@ -127,6 +132,19 @@ export const ProjectDetailScreen = ({
     else if (action === 'complete') complete.mutate({ id: pid })
     else if (action === 'cancel') cancel.mutate({ id: pid })
     setIsStatusModalOpen(false)
+  }
+
+  const handleSaveName = async () => {
+    if (!selectedProject || !tempTitle.trim()) return
+    try {
+        await updateProject.mutateAsync({
+        id: selectedProject.id,
+        updates: { name: tempTitle }
+        })
+        setIsEditingTitle(false)
+    } catch (error) {
+        console.error("Failed to rename", error)
+    }
   }
 
   if (isLoading) {
@@ -481,8 +499,52 @@ const handleExportCSV = () => {
       {/* Status Change Modal */}
       <Modal
         isOpen={isStatusModalOpen}
-        onClose={() => setIsStatusModalOpen(false)}
-        title="Alterar Status do Projeto"
+        onClose={() => {
+            setIsStatusModalOpen(false)
+            setIsEditingTitle(false)
+        }}
+        title={
+            isEditingTitle ? (
+              <div className="flex items-center gap-2 w-full max-w-md">
+                <input 
+                  value={tempTitle}
+                  onChange={(e) => setTempTitle(e.target.value)}
+                  className="flex-1 p-1.5 border border-slate-300 rounded text-xl font-bold text-slate-800 outline-none focus:border-blue-500"
+                  autoFocus
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveName()
+                      if (e.key === 'Escape') setIsEditingTitle(false)
+                  }}
+                />
+                <div className="flex shrink-0">
+                    <button onClick={(e) => { e.stopPropagation(); handleSaveName() }} className="p-2 hover:bg-green-100 rounded text-green-600" title="Salvar">
+                    <Check size={20} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setIsEditingTitle(false) }} className="p-2 hover:bg-red-100 rounded text-red-600" title="Cancelar">
+                    <X size={20} />
+                    </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <span className="truncate max-w-sm">{selectedProject?.name}</span>
+                {(user?.isAdmin || user?.role === 'admin') && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setTempTitle(selectedProject?.name || '')
+                      setIsEditingTitle(true)
+                    }}
+                    className="p-1.5 hover:bg-slate-100 rounded text-slate-400 hover:text-blue-600 transition-colors"
+                    title="Renomear Projeto"
+                  >
+                    <Edit2 size={18} />
+                  </button>
+                )}
+              </div>
+            )
+        }
       >
         <div className="space-y-3">
            <p className="text-sm text-slate-600 mb-4">Selecione o novo status para o projeto:</p>
