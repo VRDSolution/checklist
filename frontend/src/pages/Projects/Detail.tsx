@@ -401,9 +401,12 @@ const handleExportCSV = () => {
                   <p className="font-medium">{user.label}</p>
                   <p className="text-xs text-slate-500">{user.subLabel}</p>
                 </div>
-                <Button variant="outline" className="py-1 px-3 text-sm w-auto" onClick={() => handleAddContributor(user.id)}>
+                <button 
+                  className="py-1 px-3 text-sm w-auto bg-white text-slate-700 border-2 border-slate-200 hover:bg-slate-50 rounded-xl font-bold flex items-center justify-center gap-3 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed" 
+                  onClick={() => handleAddContributor(user.id)}
+                >
                   Adicionar
-                </Button>
+                </button>
               </div>
             ))}
             {userSearch.length > 2 && foundUsers.length === 0 && (

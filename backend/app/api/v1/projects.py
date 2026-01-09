@@ -222,17 +222,9 @@ async def delete_project(
         404: Project not found
         401: Unauthorized
     """
-    # CRITICAL SECURITY FIX: Verify ownership before deletion
-    project = await service.get_project(project_id)
-    
     # Authorization logic
-    is_admin = current_user.is_admin
-    is_owner = project.responsible_user_id == current_user.id
-    is_supervisor = current_user.is_supervisor
-    
-    can_delete = is_admin or (is_supervisor and is_owner)
-    
-    if not can_delete:
+    # APENAS ADMINS podem excluir projetos agora
+    if not current_user.is_admin:
         logger.warning(
             "unauthorized_delete_attempt",
             user_id=current_user.id,
@@ -241,7 +233,7 @@ async def delete_project(
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Você não tem permissão para excluir este projeto"
+            detail="Apenas administradores podem excluir projetos"
         )
     
     try:

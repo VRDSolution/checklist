@@ -68,3 +68,17 @@ async def list_checkins(
     skip = (page - 1) * size
     checkins = await service.get_history(skip=skip, limit=size)
     return {"items": checkins, "total": len(checkins)}
+
+@router.delete("/{checkin_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_checkin(
+    *,
+    checkin_id: int,
+    service: CheckinService = Depends(get_checkin_service),
+    current_user: User = Depends(get_current_active_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    success = await service.delete_checkin(checkin_id)
+    if not success:
+         raise HTTPException(status_code=404, detail="Checkin not found")

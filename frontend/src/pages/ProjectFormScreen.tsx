@@ -8,6 +8,7 @@ import { Autocomplete, AutocompleteOption } from '../components/ui/Autocomplete'
 import { ClientFormModal } from '../components/modals/ClientFormModal'
 import { Screen, Project } from '../types/mobile'
 import { useData } from '../contexts/DataContext'
+import { useAuth } from '../contexts/AuthContext'
 import { clientService, userService } from '../services/api'
 import { useParams } from 'react-router-dom'
 import { useProject } from '../hooks/useProjects'
@@ -25,6 +26,8 @@ export const ProjectFormScreen = ({
   initialData,
   mode = 'add'
 }: ProjectFormScreenProps) => {
+  const { user } = useAuth()
+  const isAdmin = (user as any)?.isAdmin || (user as any)?.role === 'admin'
   const { addProject, updateProject } = useData()
   const { id } = useParams<{ id: string }>()
   const { data: fetchedProject, isLoading } = useProject(id || '')
@@ -170,6 +173,7 @@ export const ProjectFormScreen = ({
               value={formData.name || ''} 
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               required
+              disabled={mode === 'edit' && !isAdmin}
             />
             {errors.name && (
               <p className="text-sm text-red-600 mt-1 flex items-center gap-1">

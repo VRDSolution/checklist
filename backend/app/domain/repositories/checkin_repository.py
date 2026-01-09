@@ -42,3 +42,11 @@ class CheckinRepository:
             .limit(limit)
             .all()
         )
+
+    def delete(self, checkin_id: int) -> bool:
+        checkin = self.get_by_id(checkin_id)
+        if checkin:
+            self.session.delete(checkin)
+            self.session.commit()
+            return True
+        return False

@@ -56,13 +56,13 @@ api.interceptors.response.use(
         } catch (refreshError) {
           // Refresh failed, logout user
           useAuthStore.getState().logout()
-          window.location.href = '/login'
+          window.location.href = '/checklist/login'
           return Promise.reject(refreshError)
         }
       } else {
         // No refresh token, logout user
         useAuthStore.getState().logout()
-        window.location.href = '/login'
+        window.location.href = '/checklist/login'
       }
     }
     
@@ -184,8 +184,8 @@ class CheckinService {
       const response = await api.get('/checkins/active')
       return response.data
     } catch (error: any) {
-      // If 404 or null returned
-      if (error.response?.status === 404) {
+      // If 404, 403, 401 or null returned
+      if (error.response?.status === 404 || error.response?.status === 403 || error.response?.status === 401) {
         return null
       }
       throw error
@@ -226,6 +226,10 @@ class CheckinService {
       params: { page, size }
     })
     return response.data
+  }
+
+  async delete(id: number): Promise<void> {
+    await api.delete(`/checkins/${id}`)
   }
 
   // Criar check-in completo (fluxo offline/mobile)

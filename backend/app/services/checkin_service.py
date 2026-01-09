@@ -112,3 +112,6 @@ class CheckinService:
 
     async def get_history(self, skip: int = 0, limit: int = 100):
         return self.repository.get_all(skip, limit)
+
+    async def delete_checkin(self, checkin_id: int) -> bool:
+        return self.repository.delete(checkin_id)

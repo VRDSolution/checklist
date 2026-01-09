@@ -10,7 +10,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { ACTIVITY_TAGS } from '../constants'
 import { useParams } from 'react-router-dom'
 import { useProject, useProjectContributors, useAddContributor, useRemoveContributor, useProjectStatus } from '../hooks/useProjects'
-import { userService } from '../services/api'
+import { userService, checkinService } from '../services/api'
 import { UserRole } from '../types/auth.types'
 
 // --- PRINT STYLES ---
@@ -76,7 +76,7 @@ export const ProjectDetailScreen = ({
   onNavigate
 }: ProjectDetailScreenProps) => {
   const { user, isAdmin } = useAuth()
-  const { checkins, updateCheckin } = useData()
+  const { checkins, updateCheckin, refreshData } = useData()
   const [editingCheckin, setEditingCheckin] = useState<Checkin | null>(null)
   
   const { id } = useParams<{ id: string }>()
@@ -404,7 +404,22 @@ const handleExportCSV = () => {
             </div>
 
             {(user?.isAdmin || user?.role === 'admin') && (
-              <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end no-print">
+              <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end items-center gap-4 no-print">
+                <button 
+                   className="text-sm font-bold text-red-600 flex items-center gap-1 hover:underline"
+                   onClick={async () => {
+                     if (window.confirm('Tem certeza que deseja excluir este registro de histórico?')) {
+                       try {
+                         await checkinService.delete(c.id)
+                         await refreshData()
+                       } catch (e) {
+                         alert('Erro ao excluir check-in')
+                       }
+                     }
+                   }}
+                >
+                   <Trash2 size={14} /> Excluir
+                </button>
                 <button 
                   onClick={() => setEditingCheckin(c)}
                   className="text-sm font-bold text-blue-900 flex items-center gap-1 hover:underline"

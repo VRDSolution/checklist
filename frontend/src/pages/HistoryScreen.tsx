@@ -18,6 +18,7 @@ export const HistoryScreen = ({
   const { user } = useAuth()
   const { projects, checkins, deleteProject } = useData()
   const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
 
   const canManageProjects = React.useMemo(() => {
     if (!user) return false
@@ -26,14 +27,23 @@ export const HistoryScreen = ({
   }, [user])
 
   const filteredProjects = useMemo(() => {
-    const base = projects // Adjust later if role-based filtering returns
-    if (!searchTerm.trim()) return base
-    const term = searchTerm.toLowerCase()
-    return base.filter(p => 
-      p.name.toLowerCase().includes(term) ||
-      (p.client && p.client.toLowerCase().includes(term))
-    )
-  }, [projects, searchTerm])
+    let result = projects
+    
+    // Status Filter
+    if (statusFilter) {
+      result = result.filter(p => p.status === statusFilter)
+    }
+
+    // Search Filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase()
+      result = result.filter(p => 
+        p.name.toLowerCase().includes(term) ||
+        (p.client && p.client.toLowerCase().includes(term))
+      )
+    }
+    return result
+  }, [projects, searchTerm, statusFilter])
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -53,7 +63,21 @@ export const HistoryScreen = ({
         )}
       </header>
 
-      <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar projetos..." className="mb-6" />
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder="Buscar projetos..." className="flex-1" />
+        <select 
+          value={statusFilter} 
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="p-3 border border-slate-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 min-w-[200px]"
+        >
+          <option value="">Todos os Status</option>
+          <option value="Em Andamento">Em Andamento</option>
+          <option value="Pausado">Pausado</option>
+          <option value="Concluído">Concluído</option>
+          <option value="Cancelado">Cancelado</option>
+        </select>
+      </div>
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProjects.map(p => (
           <Card key={p.id} onClick={() => { onSelectProject(p); onNavigate('projectDetail') }} className="p-6 hover:shadow-md transition-shadow cursor-pointer group">
@@ -69,7 +93,7 @@ export const HistoryScreen = ({
               }`}>
                 {p.status}
               </span>
-              {canManageProjects && (
+              {((user as any)?.isAdmin === true || (user as any)?.role === 'admin') && (
                 <button
                   className="text-red-500 hover:bg-red-50 p-2 rounded"
                   title="Excluir projeto"
