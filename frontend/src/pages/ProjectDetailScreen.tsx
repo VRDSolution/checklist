@@ -156,7 +156,8 @@ export const ProjectDetailScreen = ({
   const projectCheckins = (checkins || []).filter(c => c.projectId === selectedProject.id)
   
   // Check if user can edit this project
-  const canEdit = isAdmin || user?.role === UserRole.SUPERVISOR || user?.email === selectedProject.responsibleEmail
+  const isAdminUser = (user as any)?.isAdmin === true || user?.role === 'admin' || user?.role === 'supervisor';
+  const canEdit = isAdminUser || user?.email === selectedProject.responsibleEmail;
 
   const handleExportPDF = () => {
     window.print()
@@ -403,7 +404,7 @@ const handleExportCSV = () => {
               )}
             </div>
 
-            {(user?.isAdmin || user?.role === 'admin') && (
+            {(isAdminUser || user?.role === 'admin') && (
               <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end items-center gap-4 no-print">
                 <button 
                    className="text-sm font-bold text-red-600 flex items-center gap-1 hover:underline"

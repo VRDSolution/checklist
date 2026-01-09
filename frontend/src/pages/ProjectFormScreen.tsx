@@ -27,7 +27,7 @@ export const ProjectFormScreen = ({
   mode = 'add'
 }: ProjectFormScreenProps) => {
   const { user } = useAuth()
-  const isAdmin = (user as any)?.isAdmin || (user as any)?.role === 'admin'
+  const isAdmin = (user as any)?.isAdmin === true || user?.role === 'admin'
   const { addProject, updateProject } = useData()
   const { id } = useParams<{ id: string }>()
   const { data: fetchedProject, isLoading } = useProject(id || '')
