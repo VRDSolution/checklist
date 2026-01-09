@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const logout = () => {
-    authService.logout().catch(console.error) // Try to logout on server, but ignore errors
+    authService.logout().catch(() => {}) // Try to logout on server, but ignore errors
     storeLogout()
     setUser(null)
   }

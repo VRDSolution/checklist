@@ -68,7 +68,7 @@ export const HistoryScreen = ({
         <select 
           value={statusFilter} 
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="p-3 border border-slate-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 min-w-[200px]"
+          className="w-full md:w-auto py-2 px-3 rounded-lg border border-slate-300 bg-white outline-none focus:ring-2 focus:ring-blue-900 text-sm text-slate-600 transition h-[38px] min-w-[200px]"
         >
           <option value="">Todos os Status</option>
           <option value="Em Andamento">Em Andamento</option>
