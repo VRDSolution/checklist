@@ -70,7 +70,15 @@ interface ProjectDetailScreenProps {
   onNavigate: (screen: Screen) => void
 }
 
-export const ProjectDetailScreen = ({ 
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'Concluído': return 'bg-green-100 text-green-800'
+    case 'Pausado': return 'bg-yellow-100 text-yellow-800'
+    default: return 'bg-blue-100 text-blue-800' // Em Andamento
+  }
+}
+
+export const ProjectDetailScreen = ({  
   selectedProject: propProject, 
   onNavigate
 }: ProjectDetailScreenProps) => {
@@ -147,21 +155,24 @@ export const ProjectDetailScreen = ({
   // Inline Edit Legacy
   const [isEditingName, setIsEditingName] = useState(false)
   const [tempName, setTempName] = useState('')
+  const [tempStatus, setTempStatus] = useState('')
   const updateProject = useUpdateProject()
 
   const handleStartEdit = () => {
     if (!isAdminUser) return
     setTempName(selectedProject.name)
+    setTempStatus(selectedProject.status)
     setIsEditingName(true)
   }
 
   const handleCancelEdit = () => {
     setIsEditingName(false)
     setTempName('')
+    setTempStatus('')
   }
 
   const handleSaveName = async () => {
-    if (!tempName.trim() || tempName === selectedProject.name) {
+    if (!tempName.trim()) {
       setIsEditingName(false)
       return
     }
@@ -169,11 +180,14 @@ export const ProjectDetailScreen = ({
     try {
       await updateProject.mutateAsync({
         id: selectedProject.id,
-        updates: { name: tempName }
+        updates: { 
+          name: tempName,
+          status: tempStatus
+        }
       })
       setIsEditingName(false)
     } catch (error) {
-      console.error('Failed to update project name', error)
+      console.error('Failed to update project', error)
     }
   }
 
@@ -284,7 +298,18 @@ const handleExportCSV = () => {
                   className="w-64 p-2 px-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 text-xl font-bold focus:bg-white focus:ring-2 focus:ring-blue-900 focus:border-transparent outline-none transition-all"
                   autoFocus
                 />
-                <button onClick={handleSaveName} className="p-1 hover:bg-green-100 rounded text-green-600" title="Salvar">
+                
+                <select
+                  value={tempStatus}
+                  onChange={(e) => setTempStatus(e.target.value)}
+                  className="p-2 px-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-blue-900 focus:border-transparent outline-none transition-all ml-2"
+                >
+                  <option value="Em Andamento">Em Andamento</option>
+                  <option value="Concluído">Concluído</option>
+                  <option value="Pausado">Pausado</option>
+                </select>
+
+                <button onClick={handleSaveName} className="p-1 hover:bg-green-100 rounded text-green-600 ml-2" title="Salvar">
                   <Check size={20} />
                 </button>
                 <button onClick={handleCancelEdit} className="p-1 hover:bg-red-100 rounded text-red-600" title="Cancelar">
@@ -292,13 +317,16 @@ const handleExportCSV = () => {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2 group">
+              <div className="flex items-center gap-2 group mb-1">
                 <h1 className="text-xl font-bold text-slate-800">{selectedProject.name}</h1>
+                <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(selectedProject.status)}`}>
+                  {selectedProject.status}
+                </span>
                 {isAdminUser && (
                   <button 
                     onClick={handleStartEdit}
                     className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-blue-600"
-                    title="Renomear Projeto"
+                    title="Editar Nome e Status"
                   >
                     <Edit size={16} />
                   </button>
