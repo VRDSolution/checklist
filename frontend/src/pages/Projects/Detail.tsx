@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ArrowLeft, FileText, Edit, History, Users, Plus, Trash2, FileSpreadsheet } from 'lucide-react'
+import { ArrowLeft, FileText, Edit, History, Users, Plus, Trash2, FileSpreadsheet, Check, X } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
 import { Modal } from '../../components/ui/Modal'
 import { Input } from '../../components/ui/Input'
@@ -9,7 +9,7 @@ import { useData } from '../../contexts/DataContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { ACTIVITY_TAGS } from '../../constants'
 import { useParams } from 'react-router-dom'
-import { useProject, useProjectContributors, useAddContributor, useRemoveContributor } from '../../hooks/useProjects'
+import { useProject, useProjectContributors, useAddContributor, useRemoveContributor, useUpdateProject } from '../../hooks/useProjects'
 import { userService } from '../../services/api'
 
 // --- PRINT STYLES ---
@@ -142,6 +142,40 @@ export const ProjectDetailScreen = ({
   
   // Check if user can edit this project
   const canEdit = user?.isAdmin || user?.email === selectedProject.responsibleEmail
+  const isAdminUser = (user as any)?.isAdmin === true || user?.role === 'admin' // Robust admin check
+
+  // Inline Edit Legacy
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [tempName, setTempName] = useState('')
+  const updateProject = useUpdateProject()
+
+  const handleStartEdit = () => {
+    if (!isAdminUser) return
+    setTempName(selectedProject.name)
+    setIsEditingName(true)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditingName(false)
+    setTempName('')
+  }
+
+  const handleSaveName = async () => {
+    if (!tempName.trim() || tempName === selectedProject.name) {
+      setIsEditingName(false)
+      return
+    }
+
+    try {
+      await updateProject.mutateAsync({
+        id: selectedProject.id,
+        updates: { name: tempName }
+      })
+      setIsEditingName(false)
+    } catch (error) {
+      console.error('Failed to update project name', error)
+    }
+  }
 
   const handleExportPDF = () => {
     window.print()
@@ -242,7 +276,35 @@ const handleExportCSV = () => {
         <div className="flex items-center gap-4">
           <button onClick={() => onNavigate('history')} className="p-2 hover:bg-slate-200 rounded-full no-print"><ArrowLeft /></button>
           <div>
-            <h1 className="text-xl font-bold text-slate-800">{selectedProject.name}</h1>
+            {isEditingName ? (
+              <div className="flex items-center gap-2 mb-1">
+                <input 
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  className="w-64 p-2 px-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 text-xl font-bold focus:bg-white focus:ring-2 focus:ring-blue-900 focus:border-transparent outline-none transition-all"
+                  autoFocus
+                />
+                <button onClick={handleSaveName} className="p-1 hover:bg-green-100 rounded text-green-600" title="Salvar">
+                  <Check size={20} />
+                </button>
+                <button onClick={handleCancelEdit} className="p-1 hover:bg-red-100 rounded text-red-600" title="Cancelar">
+                  <X size={20} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 group">
+                <h1 className="text-xl font-bold text-slate-800">{selectedProject.name}</h1>
+                {isAdminUser && (
+                  <button 
+                    onClick={handleStartEdit}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-blue-600"
+                    title="Renomear Projeto"
+                  >
+                    <Edit size={16} />
+                  </button>
+                )}
+              </div>
+            )}
             <p className="text-sm text-slate-500">Cliente: {selectedProject.client}</p>
             <p className="text-sm text-slate-500">Responsável: {selectedProject.responsible}</p>
           </div>
