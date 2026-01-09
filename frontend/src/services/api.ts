@@ -83,7 +83,7 @@ class ProjectService {
     return response.data
   }
 
-  async getById(id: number): Promise<Project> {
+  async getById(id: number | string): Promise<Project> {
     const response = await api.get(`/projects/${id}`)
     return response.data
   }
@@ -93,44 +93,44 @@ class ProjectService {
     return response.data
   }
 
-  async update(id: number, data: Partial<CreateProjectRequest>): Promise<Project> {
+  async update(id: number | string, data: Partial<CreateProjectRequest>): Promise<Project> {
     const response = await api.put(`/projects/${id}`, data)
     return response.data
   }
 
-  async addContributor(projectId: number, userId: number): Promise<void> {
+  async addContributor(projectId: number | string, userId: number | string): Promise<void> {
     await api.post(`/projects/${projectId}/contributors`, { user_id: userId })
   }
 
-  async removeContributor(projectId: number, userId: number): Promise<void> {
+  async removeContributor(projectId: number | string, userId: number | string): Promise<void> {
     await api.delete(`/projects/${projectId}/contributors/${userId}`)
   }
 
-  async getContributors(projectId: number): Promise<any[]> {
+  async getContributors(projectId: number | string): Promise<any[]> {
     const response = await api.get(`/projects/${projectId}/contributors`)
     return response.data
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number | string): Promise<void> {
     await api.delete(`/projects/${id}`, { params: { force: true } })
   }
 
-  async start(id: number): Promise<Project> {
+  async start(id: number | string): Promise<Project> {
     const response = await api.post(`/projects/${id}/start`)
     return response.data
   }
 
-  async pause(id: number): Promise<Project> {
+  async pause(id: number | string): Promise<Project> {
     const response = await api.post(`/projects/${id}/pause`)
     return response.data
   }
 
-  async complete(id: number, completionDate?: string): Promise<Project> {
+  async complete(id: number | string, completionDate?: string): Promise<Project> {
     const response = await api.post(`/projects/${id}/complete`, { completion_date: completionDate })
     return response.data
   }
 
-  async cancel(id: number, reason?: string): Promise<Project> {
+  async cancel(id: number | string, reason?: string): Promise<Project> {
     const response = await api.post(`/projects/${id}/cancel`, { cancellation_reason: reason })
     return response.data
   }
@@ -142,7 +142,7 @@ class ClientService {
     return response.data
   }
 
-  async getById(id: number): Promise<Client> {
+  async getById(id: number | string): Promise<Client> {
     const response = await api.get(`/clients/${id}`)
     return response.data
   }
@@ -166,7 +166,7 @@ class UserService {
 }
 
 class TaskService {
-  async getByProject(projectId: number): Promise<Task[]> {
+  async getByProject(projectId: number | string): Promise<Task[]> {
     const response = await api.get(`/projects/${projectId}/tasks`)
     return response.data
   }
@@ -193,26 +193,26 @@ class CheckinService {
   }
 
   // Iniciar check-in
-  async startCheckin(data: { project_id: number, start_time?: string, arrival_time?: string }): Promise<Checkin> {
+  async startCheckin(data: { project_id: number | string, start_time?: string, arrival_time?: string }): Promise<Checkin> {
     const response = await api.post('/checkins/start', data)
     return response.data
   }
 
   // Parar check-in
-  async stopCheckin(checkinId: number, data: { end_time?: string, activities: string[], observations?: string }): Promise<Checkin> {
+  async stopCheckin(checkinId: number | string, data: { end_time?: string, activities: string[], observations?: string }): Promise<Checkin> {
     const response = await api.post(`/checkins/${checkinId}/stop`, data)
     return response.data
   }
 
   // Legacy / Desktop support
-  async arrival(data: { project_id: number, description?: string }): Promise<Checkin> {
+  async arrival(data: { project_id: number | string, description?: string }): Promise<Checkin> {
     return this.startCheckin({
       project_id: data.project_id,
       start_time: new Date().toISOString()
     })
   }
 
-  async checkout(data: { checkin_id: number, task_ids?: number[], description?: string }): Promise<Checkin> {
+  async checkout(data: { checkin_id: number | string, task_ids?: number[], description?: string }): Promise<Checkin> {
     return this.stopCheckin(data.checkin_id, {
       end_time: new Date().toISOString(),
       activities: [], // Desktop flow might need update to support string activities or map tasks
@@ -228,7 +228,7 @@ class CheckinService {
     return response.data
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number | string): Promise<void> {
     await api.delete(`/checkins/${id}`)
   }
 
@@ -240,7 +240,7 @@ class CheckinService {
 }
 
 class SprintService {
-  async getByProject(projectId: number): Promise<any[]> {
+  async getByProject(projectId: number | string): Promise<any[]> {
     const response = await api.get('/sprints/', { params: { project_id: projectId } })
     return response.data
   }
@@ -250,17 +250,17 @@ class SprintService {
     return response.data
   }
 
-  async update(id: number, data: any): Promise<any> {
+  async update(id: number | string, data: any): Promise<any> {
     const response = await api.put(`/sprints/${id}`, data)
     return response.data
   }
 
-  async updateTaskStatus(taskId: number, isCompleted: boolean): Promise<any> {
+  async updateTaskStatus(taskId: number | string, isCompleted: boolean): Promise<any> {
     const response = await api.patch(`/sprints/tasks/${taskId}`, { is_completed: isCompleted })
     return response.data
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number | string): Promise<void> {
     await api.delete(`/sprints/${id}`)
   }
 }
