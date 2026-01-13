@@ -11,6 +11,10 @@ import { useData } from '../../contexts/DataContext';
 import { format, isValid } from 'date-fns';
 
 const safeFormat = (dateStr: string, formatStr: string) => {
+  // Fix timezone issue: force local time if string is just YYYY-MM-DD
+  if (dateStr && dateStr.length === 10) {
+    dateStr += 'T00:00:00';
+  }
   const date = new Date(dateStr);
   return isValid(date) ? format(date, formatStr) : 'Invalid Date';
 };
@@ -217,10 +221,10 @@ export const SprintsScreen: React.FC<SprintsScreenProps> = ({ onNavigate }) => {
             
             <Button 
               onClick={() => setIsCreateModalOpen(true)}
-              className="!w-[200px] px-4 py-2"
+              className="w-auto md:w-[200px] px-4 py-2"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Sprint
+              <Plus className="w-4 h-4 mr-0 md:mr-2" />
+              <span className="hidden md:inline">Novo Sprint</span>
             </Button>
           </div>
 
