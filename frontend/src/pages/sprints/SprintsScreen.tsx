@@ -19,6 +19,21 @@ const safeFormat = (dateStr: string, formatStr: string) => {
   return isValid(date) ? format(date, formatStr) : 'Invalid Date';
 };
 
+// Helper: Extract YYYY-MM-DD from an ISO string (or Date object) based on UTC values.
+// This ensures that "2026-01-16T00:00:00.000Z" (which is actually Jan 16th)
+// is converted to "2026-01-16" for the input value, regardless of the user's local timezone.
+const toInputDate = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (!isValid(date)) return '';
+  
+  // Use UTC methods to extract the exact stored date
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 interface SprintsScreenProps {
   onNavigate: (page: string) => void;
 }
@@ -88,8 +103,8 @@ export const SprintsScreen: React.FC<SprintsScreenProps> = ({ onNavigate }) => {
     setEditingSprint(sprint);
     setFormData({
       title: sprint.title,
-      start_date: sprint.start_date,
-      end_date: sprint.end_date,
+      start_date: toInputDate(sprint.start_date),
+      end_date: toInputDate(sprint.end_date),
       observation: sprint.observation,
       tasks: [] // Only for new tasks
     });
@@ -221,7 +236,7 @@ export const SprintsScreen: React.FC<SprintsScreenProps> = ({ onNavigate }) => {
             
             <Button 
               onClick={() => setIsCreateModalOpen(true)}
-              className="w-auto md:w-[200px] px-4 py-2"
+              className="w-[40px] h-[40px] md:w-[200px] md:h-auto p-0 md:px-4 flex items-center justify-center flex-none"
             >
               <Plus className="w-4 h-4 mr-0 md:mr-2" />
               <span className="hidden md:inline">Novo Sprint</span>
