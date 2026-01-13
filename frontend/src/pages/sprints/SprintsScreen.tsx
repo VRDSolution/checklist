@@ -236,7 +236,7 @@ export const SprintsScreen: React.FC<SprintsScreenProps> = ({ onNavigate }) => {
             
             <Button 
               onClick={() => setIsCreateModalOpen(true)}
-              className="w-[40px] h-[40px] md:w-[200px] md:h-auto p-0 md:px-4 flex items-center justify-center flex-none"
+              className="p-2 md:w-[200px] md:px-4 md:py-2 flex items-center justify-center flex-none"
             >
               <Plus className="w-4 h-4 mr-0 md:mr-2" />
               <span className="hidden md:inline">Novo Sprint</span>
