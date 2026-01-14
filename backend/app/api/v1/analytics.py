@@ -27,10 +27,16 @@ async def get_dashboard_analytics(
     first_day_of_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     
     # Fetch checkins for the current month with relations needed
-    # We calculate aggregation in Python to avoid database schema inconsistencies with 'duracao_minutos'
-    # Use defer to prevent selecting 'duracao_minutos' column which might not exist in DB
-    month_checkins = db.query(Checkin).options(
-        defer(Checkin.duracao_minutos)
+    # We select specific columns to avoid 'duracao_minutos' column error in SELECT *
+    month_checkins = db.query(
+        Checkin.id, 
+        Checkin.data_inicio, 
+        Checkin.hora_inicio, 
+        Checkin.data_fim, 
+        Checkin.hora_fim, 
+        Checkin.status,
+        User.name.label('user_name'),
+        Project.name.label('project_name')
     ).join(Project).join(User).filter(
         Checkin.data_inicio >= first_day_of_month,
         Checkin.status == CheckinStatus.CONCLUIDO
@@ -40,23 +46,25 @@ async def get_dashboard_analytics(
     project_hours = {}
     tech_stats = {}
 
-    for checkin in month_checkins:
-        # Determine duration safely
+    for row in month_checkins:
+        # Calculate duration inline
         duration_mins = 0
-        if getattr(checkin, 'duracao_minutos', None):
-            duration_mins = checkin.duracao_minutos
-        else:
-            # Fallback using model method if column missing/empty
-            duration_mins = checkin.calculate_duration()
+        if row.data_inicio and row.hora_inicio and row.data_fim and row.hora_fim:
+             try:
+                 start = datetime.combine(row.data_inicio, row.hora_inicio)
+                 end = datetime.combine(row.data_fim, row.hora_fim)
+                 duration_mins = (end - start).total_seconds() / 60
+             except Exception:
+                 duration_mins = 0
         
         hours = duration_mins / 60.0
 
         # 1. Project stats
-        p_name = checkin.projeto.name
+        p_name = row.project_name
         project_hours[p_name] = project_hours.get(p_name, 0) + hours
 
         # 2. Technician stats
-        u_name = checkin.usuario.name
+        u_name = row.user_name
         if u_name not in tech_stats:
             tech_stats[u_name] = {"checkins": 0, "hours": 0}
         tech_stats[u_name]["checkins"] += 1
