@@ -25,6 +25,12 @@ class CheckinStop(BaseModel):
     activities: List[str]
     observations: Optional[str] = None
 
+class CheckinUpdate(BaseModel):
+    arrival_time: Optional[datetime] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = Field(None, validation_alias='checkout_time')
+    observations: Optional[str] = None
+
 class ProjectSummary(BaseModel):
     name: str
 

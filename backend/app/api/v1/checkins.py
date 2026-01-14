@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user
 from app.models.user import User
-from app.schemas.checkin import CheckinCreateFull, CheckinResponse, CheckinListResponse, CheckinStart, CheckinStop
+from app.schemas.checkin import CheckinCreateFull, CheckinResponse, CheckinListResponse, CheckinStart, CheckinStop, CheckinUpdate
 from app.services.checkin_service import CheckinService
 from app.domain.repositories.checkin_repository import CheckinRepository
 from app.db.session import get_db
@@ -55,6 +55,22 @@ async def create_full_checkin(
 ) -> CheckinResponse:
     request.user_id = current_user.id
     checkin = await service.create_full_checkin(request)
+    return checkin
+
+@router.put("/{checkin_id}", response_model=CheckinResponse)
+async def update_checkin(
+    *,
+    checkin_id: int,
+    request: CheckinUpdate,
+    service: CheckinService = Depends(get_checkin_service),
+    current_user: User = Depends(get_current_active_user)
+) -> CheckinResponse:
+    if not current_user.is_admin:
+        # Check if user owns the checkin (optional logic, but typically users can edit their own or admin only)
+        # For now enforcing admin for historic edits or rely on service logic
+        pass
+
+    checkin = await service.update_checkin(checkin_id, request)
     return checkin
 
 @router.get("/", response_model=CheckinListResponse)

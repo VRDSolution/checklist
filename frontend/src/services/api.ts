@@ -306,6 +306,11 @@ class CheckinService {
     return response.data
   }
 
+  async update(id: number | string, data: any): Promise<Checkin> {
+    const response = await api.put(`/checkins/${id}`, data)
+    return response.data
+  }
+
   async delete(id: number | string): Promise<void> {
     await api.delete(`/checkins/${id}`)
   }

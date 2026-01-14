@@ -120,9 +120,26 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const updateCheckin = (checkin: Checkin) => {
-    console.warn('updateCheckin called in DataContext - should use API')
-    setCheckins(prev => prev.map(c => c.id === checkin.id ? checkin : c))
+  const updateCheckin = async (checkin: Checkin) => {
+    try {
+      // Map domain checkin to API update payload
+      // Note: frontend 'endTime' maps to backend 'checkout_time' in schema but 'end_time' in CheckinUpdate
+      const updatePayload = {
+        observations: checkin.observations,
+        start_time: checkin.startTime,
+        arrival_time: checkin.arrivalTime,
+        end_time: checkin.endTime
+      }
+
+      const updated = await checkinService.update(parseInt(checkin.id), updatePayload)
+      // Update local state
+      const domainCheckin = CheckinMapper.toDomain(updated)
+      setCheckins(prev => prev.map(c => c.id === checkin.id ? domainCheckin : c))
+      toast.success('Check-in atualizado com sucesso!')
+    } catch (error) {
+       console.error(error)
+       toast.error('Erro ao atualizar check-in')
+    }
   }
 
   const deleteProject = async (id: string) => {

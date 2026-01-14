@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 from app.domain.repositories.checkin_repository import CheckinRepository
-from app.schemas.checkin import CheckinCreateFull, CheckinStart, CheckinStop
+from app.schemas.checkin import CheckinCreateFull, CheckinStart, CheckinStop, CheckinUpdate
 from app.models.checkin import Checkin, CheckinStatus
 
 class CheckinService:
@@ -112,6 +112,33 @@ class CheckinService:
 
     async def get_history(self, skip: int = 0, limit: int = 100):
         return self.repository.get_all(skip, limit)
+    
+    async def update_checkin(self, checkin_id: int, data: CheckinUpdate) -> Checkin:
+        checkin = self.repository.get_by_id(checkin_id)
+        if not checkin:
+            raise HTTPException(status_code=404, detail="Checkin not found")
+            
+        if data.start_time:
+            checkin.data_inicio = data.start_time.date()
+            checkin.hora_inicio = data.start_time.time()
+            
+        if data.arrival_time:
+            checkin.hora_chegada = data.arrival_time.time()
+            
+        if data.end_time:
+            checkin.data_fim = data.end_time.date()
+            checkin.hora_fim = data.end_time.time()
+            
+        if data.observations:
+            checkin.observacoes = data.observations
+            
+        # Recalculate duration if start or end changed
+        if (data.start_time or data.end_time) and checkin.data_inicio and checkin.hora_inicio and checkin.data_fim and checkin.hora_fim:
+            start = datetime.combine(checkin.data_inicio, checkin.hora_inicio)
+            end = datetime.combine(checkin.data_fim, checkin.hora_fim)
+            checkin.duracao_minutos = int((end - start).total_seconds() / 60)
+            
+        return self.repository.update(checkin)
 
     async def delete_checkin(self, checkin_id: int) -> bool:
         return self.repository.delete(checkin_id)
