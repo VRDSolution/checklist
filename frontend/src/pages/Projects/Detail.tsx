@@ -99,6 +99,12 @@ export const ProjectDetailScreen = ({
   const [userSearch, setUserSearch] = useState('')
   const [foundUsers, setFoundUsers] = useState<{id: number, label: string, subLabel: string}[]>([])
 
+  // Inline Edit Legacy (Moved up to avoid conditional hook call error)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [tempName, setTempName] = useState('')
+  const [tempStatus, setTempStatus] = useState('')
+  const updateProject = useUpdateProject()
+
   const handleSearchUsers = async (query: string) => {
     setUserSearch(query)
     if (query.length > 2) {
@@ -151,12 +157,6 @@ export const ProjectDetailScreen = ({
   // Check if user can edit this project
   const canEdit = user?.isAdmin || user?.email === selectedProject.responsibleEmail
   const isAdminUser = (user as any)?.isAdmin === true || user?.role === 'admin' // Robust admin check
-
-  // Inline Edit Legacy
-  const [isEditingName, setIsEditingName] = useState(false)
-  const [tempName, setTempName] = useState('')
-  const [tempStatus, setTempStatus] = useState('')
-  const updateProject = useUpdateProject()
 
   const handleStartEdit = () => {
     if (!isAdminUser) return
@@ -543,7 +543,13 @@ const EditCheckinModal = ({
 
   const formatDateTimeLocal = (iso?: string) => {
     if (!iso) return ''
-    return new Date(iso).toISOString().slice(0, 16)
+    // Ensure we convert UTC to local time string for the input
+    const date = new Date(iso)
+    // Get the offset within the timezone
+    const offset = date.getTimezoneOffset() * 60000;
+    // Adjust the date to local time before converting to ISO
+    const localISOTime = (new Date(date.getTime() - offset)).toISOString().slice(0, 16);
+    return localISOTime;
   }
 
   return (
