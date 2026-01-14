@@ -7,9 +7,10 @@
     },
     {
       "src": "frontend/package.json",
-      "use": "@vercel/static-build",
+      "use": "@vercel/python",
       "config": {
-        "distDir": "dist"
+          "maxLambdaSize": "15mb",
+          "runtime": "python3.9"
       }
     }
   ],
