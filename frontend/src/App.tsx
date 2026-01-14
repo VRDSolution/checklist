@@ -1,8 +1,14 @@
 import MobileApp from '@/pages/MobileApp'
+import { OfflineIndicator } from '@/components/common/OfflineIndicator'
+import { Toaster } from 'react-hot-toast'
 
 function App() {
   return (
-    <MobileApp />
+    <>
+      <Toaster position="top-right" />
+      <OfflineIndicator />
+      <MobileApp />
+    </>
   )
 }
 

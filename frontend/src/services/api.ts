@@ -110,6 +110,8 @@ import {
   CreateProjectRequest, CreateTaskRequest, 
   CreateCheckinRequest, StartServiceRequest, CheckoutRequest 
 } from '@/types'
+import { syncService } from './sync.service'
+import { toast } from 'react-hot-toast' // Assuming react-hot-toast or similar is used, or alert
 
 class ProjectService {
   async getAll(): Promise<Project[]> {
@@ -228,14 +230,56 @@ class CheckinService {
 
   // Iniciar check-in
   async startCheckin(data: { project_id: number | string, start_time?: string, arrival_time?: string }): Promise<Checkin> {
-    const response = await api.post('/checkins/start', data)
-    return response.data
+    try {
+      const response = await api.post('/checkins/start', data)
+      return response.data
+    } catch (error: any) {
+      if (!navigator.onLine || error.message === 'Network Error') {
+        // Save for offline
+        await syncService.queueRequest({
+          url: '/checkins/start',
+          method: 'POST',
+          data,
+          type: 'checkin_start'
+        });
+        // Return a mock response so UI updates
+        toast.success('Você está offline. Check-in salvo localmente.');
+        return {
+          id: -1, // Temporary ID
+          project_id: Number(data.project_id),
+          user_id: 0, // Should get from store if needed
+          start_time: data.start_time || new Date().toISOString(),
+          is_active: true,
+          status: 'started'
+        } as any;
+      }
+      throw error;
+    }
   }
 
   // Parar check-in
   async stopCheckin(checkinId: number | string, data: { end_time?: string, activities: string[], observations?: string }): Promise<Checkin> {
-    const response = await api.post(`/checkins/${checkinId}/stop`, data)
-    return response.data
+    try {
+      const response = await api.post(`/checkins/${checkinId}/stop`, data)
+      return response.data
+    } catch (error: any) {
+      if (!navigator.onLine || error.message === 'Network Error') {
+        await syncService.queueRequest({
+          url: `/checkins/${checkinId}/stop`,
+          method: 'POST',
+          data,
+          type: 'checkin_stop'
+        });
+        toast.success('Você está offline. Check-out salvo localmente.');
+        return {
+          id: Number(checkinId),
+          end_time: data.end_time || new Date().toISOString(),
+          is_active: false,
+          status: 'completed'
+        } as any;
+      }
+      throw error;
+    }
   }
 
   // Legacy / Desktop support
