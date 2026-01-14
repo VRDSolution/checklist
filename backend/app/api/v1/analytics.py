@@ -3,7 +3,7 @@ Analytics API endpoints
 """
 from typing import Any, List, Dict
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 from sqlalchemy import func, case, extract
 
 from app.api.deps import get_db, require_supervisor_or_admin
@@ -28,7 +28,10 @@ async def get_dashboard_analytics(
     
     # Fetch checkins for the current month with relations needed
     # We calculate aggregation in Python to avoid database schema inconsistencies with 'duracao_minutos'
-    month_checkins = db.query(Checkin).join(Project).join(User).filter(
+    # Use defer to prevent selecting 'duracao_minutos' column which might not exist in DB
+    month_checkins = db.query(Checkin).options(
+        defer(Checkin.duracao_minutos)
+    ).join(Project).join(User).filter(
         Checkin.data_inicio >= first_day_of_month,
         Checkin.status == CheckinStatus.CONCLUIDO
     ).all()
