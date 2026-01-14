@@ -20,6 +20,11 @@ export const AppRoutes = () => {
   const { isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  
+  // Debug routing
+  React.useEffect(() => {
+    console.log('[AppRoutes] Current location:', location.pathname);
+  }, [location]);
 
 
   // Redirect based on auth state
@@ -59,15 +64,6 @@ export const AppRoutes = () => {
       />
 
       <Route
-        path="/admin/users/new"
-        element={(
-          <Private>
-            <UserRegistrationScreen />
-          </Private>
-        )}
-      />
-
-      <Route
         path="/admin/analytics"
         element={(
           <Private>
@@ -77,6 +73,15 @@ export const AppRoutes = () => {
             ) : (
               <Navigate to="/" replace />
             )}
+          </Private>
+        )}
+      />
+
+      <Route
+        path="/admin/users/new"
+        element={(
+          <Private>
+            <UserRegistrationScreen />
           </Private>
         )}
       />
