@@ -2,7 +2,7 @@
 Project model for project management
 """
 from sqlalchemy import Column, Integer, String, Text, Date, DateTime, Enum, ForeignKey, func, Table
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, synonym
 from app.core.database import Base
 import enum
 
@@ -64,6 +64,17 @@ class Project(Base):
     responsavel = relationship("User", back_populates="projetos")
     contributors = relationship("User", secondary=project_contributors, backref="contributed_projects")
     checkins = relationship("Checkin", back_populates="projeto")
+
+    # English aliases so both naming conventions work across the codebase
+    name = synonym("nome")
+    description = synonym("descricao")
+    start_date = synonym("data_inicio")
+    end_date_planned = synonym("data_fim_prevista")
+    end_date_actual = synonym("data_fim_real")
+    client_id = synonym("cliente_id")
+    responsible_user_id = synonym("responsavel_id")
+    observations = synonym("observacoes")
+    estimated_value = synonym("valor_estimado")
     
     def __repr__(self):
         return f"<Project(id={self.id}, nome='{self.nome}', status='{self.status}')>"
