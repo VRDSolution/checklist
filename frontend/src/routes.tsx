@@ -14,11 +14,13 @@ import { ProjectDetailScreen as ProjectDetail } from './pages/Projects/Detail'
 import { SuccessScreen as Success } from './pages/Checkin/Success'
 import { UserRegistrationScreen } from './pages/admin/UserRegistrationScreen'
 import { SprintsScreen } from './pages/sprints/SprintsScreen'
+import { AnalyticsDashboard } from './pages/admin/AnalyticsDashboard'
 
 export const AppRoutes = () => {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+
 
   // Redirect based on auth state
   React.useEffect(() => {
@@ -61,6 +63,20 @@ export const AppRoutes = () => {
         element={(
           <Private>
             <UserRegistrationScreen />
+          </Private>
+        )}
+      />
+
+      <Route
+        path="/admin/analytics"
+        element={(
+          <Private>
+            {/* Simple role check could be better in a dedicated Route component */}
+            {user?.role === 'admin' || user?.role === 'supervisor' ? (
+              <AnalyticsDashboard />
+            ) : (
+              <Navigate to="/" replace />
+            )}
           </Private>
         )}
       />

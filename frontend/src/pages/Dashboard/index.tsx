@@ -1,5 +1,5 @@
 import React from 'react'
-import { LogOut, User as UserIcon, Play, History, Clock, UserPlus, Calendar } from 'lucide-react'
+import { LogOut, User as UserIcon, Play, History, Clock, UserPlus, Calendar, BarChart2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useData } from '../../contexts/DataContext'
@@ -86,8 +86,20 @@ export const DashboardScreen = ({ onNavigate }: DashboardScreenProps) => {
           </div>
         </Card>
 
+        {(user?.role === 'admin' || user?.role === 'supervisor') && (
+          <Card onClick={() => navigate('/admin/analytics')} className="p-8 flex flex-col items-center text-center gap-4 hover:border-violet-500 group">
+            <div className="w-16 h-16 bg-violet-100 rounded-full flex items-center justify-center group-hover:bg-violet-600 transition-colors">
+              <BarChart2 className="text-violet-600 group-hover:text-white w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-800">Analytics</h2>
+              <p className="text-slate-500">Métricas e produtividade</p>
+            </div>
+          </Card>
+        )}
+
         {user?.role === 'admin' && (
-          <Card onClick={() => onNavigate('addUser')} className="p-8 flex flex-col items-center text-center gap-4 hover:border-purple-500 group md:col-span-2 lg:col-span-1">
+          <Card onClick={() => onNavigate('addUser')} className="p-8 flex flex-col items-center text-center gap-4 hover:border-purple-500 group">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-600 transition-colors">
               <UserPlus className="text-purple-600 group-hover:text-white w-8 h-8" />
             </div>
