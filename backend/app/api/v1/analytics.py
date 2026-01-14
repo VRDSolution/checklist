@@ -37,7 +37,7 @@ async def get_dashboard_analytics(
             Checkin.hora_fim, 
             Checkin.status,
             User.name.label('user_name'),
-            Project.name.label('project_name')
+            Project.nome.label('project_name')
         ).join(Project).join(User).filter(
             Checkin.data_inicio >= first_day_of_month,
             Checkin.status == CheckinStatus.CONCLUIDO
