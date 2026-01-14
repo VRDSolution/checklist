@@ -23,20 +23,36 @@
       "dest": "/api/index.py"
     },
     {
-      "src": "/checklist/assets/(.*)",
-      "dest": "/frontend/assets/$1"
+      "src": "/sw.js",
+      "dest": "/dist/sw.js"
+    },
+    {
+      "src": "/registerSW.js",
+      "dest": "/dist/registerSW.js"
+    },
+    {
+      "src": "/workbox-(.*)",
+      "dest": "/dist/workbox-$1"
+    },
+    {
+      "src": "/manifest.webmanifest",
+      "dest": "/dist/manifest.webmanifest"
     },
     {
       "src": "/assets/(.*)",
-      "dest": "/frontend/assets/$1"
+      "dest": "/dist/assets/$1"
+    },
+    {
+      "src": "/checklist/assets/(.*)",
+      "dest": "/dist/assets/$1"
     },
     {
       "src": "/checklist/(.*)",
-      "dest": "/frontend/index.html"
+      "dest": "/dist/index.html"
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/index.html"
+      "dest": "/dist/index.html"
     }
   ]
 }

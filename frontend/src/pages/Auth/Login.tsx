@@ -68,8 +68,6 @@ export const LoginScreen = () => {
           </Button>
 
           <div className="text-xs text-slate-400 text-center space-y-1">
-            <p className="font-semibold text-slate-500">Ambiente de Desenvolvimento (Mock)</p>
-            <p>Admin: admin@vrdsolution.com.br (123456)</p>
           </div>
         </form>
       </Card>

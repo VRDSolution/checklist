@@ -36,11 +36,11 @@ async def get_dashboard_analytics(
             Checkin.data_fim,
             Checkin.hora_fim,
             Checkin.status,
-            Checkin.user_id,
-            Checkin.project_id,
+            Checkin.usuario_id,
+            Checkin.projeto_id,
             User.name.label('user_name'),
             Project.nome.label('project_name')
-        ).join(Project, Project.id == Checkin.project_id).join(User, User.id == Checkin.user_id).filter(
+        ).join(Project, Project.id == Checkin.projeto_id).join(User, User.id == Checkin.usuario_id).filter(
             Checkin.data_inicio >= first_day_of_month,
             Checkin.status == CheckinStatus.CONCLUIDO
         ).all()
