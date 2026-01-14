@@ -19,8 +19,16 @@
       "dest": "/api/index.py"
     },
     {
+      "src": "/checklist/assets/(.*)",
+      "dest": "/frontend/assets/$1"
+    },
+    {
       "src": "/assets/(.*)",
       "dest": "/frontend/assets/$1"
+    },
+    {
+      "src": "/checklist/(.*)",
+      "dest": "/frontend/index.html"
     },
     {
       "src": "/(.*)",

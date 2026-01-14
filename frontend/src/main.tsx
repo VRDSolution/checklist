@@ -20,6 +20,10 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
+      {/* 
+        IMPORTANT: Basename must match the Vercel rewrite or subdirectory 
+        If deployed at root, remove basename. If deployed at /checklist, keep it.
+      */}
       <BrowserRouter basename="/checklist">
         <App />
         <Toaster
