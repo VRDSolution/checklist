@@ -21,6 +21,8 @@ export const DashboardScreen = ({ onNavigate }: DashboardScreenProps) => {
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Olá, {user?.name || 'Técnico'}</h1>
           <p className="text-slate-500">Bem-vindo ao seu painel</p>
+          {/* Debug Info - Remove in production */}
+           {/* <p className="text-xs text-slate-400">Role: {user?.role}</p> */}
         </div>
         <div className="flex items-center gap-3">
           <button 
