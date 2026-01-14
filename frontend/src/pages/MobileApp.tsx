@@ -1,9 +1,9 @@
 import React from 'react'
 import { AuthProvider, useAuth } from '../contexts/AuthContext'
 import { DataProvider } from '../contexts/DataContext'
-import { Project } from '../types/mobile'
+import { Project, Screen } from '../types/mobile'
 import { LoginScreen } from './LoginScreen'
-import { DashboardScreen } from './DashboardScreen'
+import { DashboardScreen } from './Dashboard'
 import { SelectProjectScreen } from './SelectProjectScreen'
 import { ProjectFormScreen } from './ProjectFormScreen'
 import { WorkflowScreen } from './WorkflowScreen'
@@ -49,7 +49,7 @@ const MobileAppContent = () => {
         path="/menu"
         element={(
           <Private>
-            <DashboardScreen onNavigate={(screen) => {
+            <DashboardScreen onNavigate={(screen: Screen) => {
               // Keep internal navigation via router
               if (screen === 'selectProject') navigate('/checkin/new')
               else if (screen === 'addProject') navigate('/projects/new')
