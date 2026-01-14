@@ -26,36 +26,57 @@ async def get_dashboard_analytics(
     today = datetime.now()
     first_day_of_month = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     
-    # 1. Total hours per project (Current Month)
-    # MySQL uses TIMEDIFF which returns time, need to convert to hours.
-    # Or simplified: sum duracao_minutos if available.
-    hours_per_project = db.query(
-        Project.name,
-        func.sum(func.coalesce(Checkin.duracao_minutos, 0) / 60).label("total_hours")
-    ).join(Checkin).filter(
+    # Fetch checkins for the current month with relations needed
+    # We calculate aggregation in Python to avoid database schema inconsistencies with 'duracao_minutos'
+    month_checkins = db.query(Checkin).join(Project).join(User).filter(
         Checkin.data_inicio >= first_day_of_month,
         Checkin.status == CheckinStatus.CONCLUIDO
-    ).group_by(Project.id, Project.name).all()
+    ).all()
+
+    # Aggregation dictionaries
+    project_hours = {}
+    tech_stats = {}
+
+    for checkin in month_checkins:
+        # Determine duration safely
+        duration_mins = 0
+        if getattr(checkin, 'duracao_minutos', None):
+            duration_mins = checkin.duracao_minutos
+        else:
+            # Fallback using model method if column missing/empty
+            duration_mins = checkin.calculate_duration()
+        
+        hours = duration_mins / 60.0
+
+        # 1. Project stats
+        p_name = checkin.projeto.name
+        project_hours[p_name] = project_hours.get(p_name, 0) + hours
+
+        # 2. Technician stats
+        u_name = checkin.usuario.name
+        if u_name not in tech_stats:
+            tech_stats[u_name] = {"checkins": 0, "hours": 0}
+        tech_stats[u_name]["checkins"] += 1
+        tech_stats[u_name]["hours"] += hours
+
+    # Format 1. Hours per Project
+    hours_data = [
+        {"name": name, "hours": round(hours, 1)} 
+        for name, hours in project_hours.items() 
+        if hours > 0
+    ]
     
-    hours_data = [{"name": r.name, "hours": round(float(r.total_hours or 0), 1)} for r in hours_per_project if r.total_hours > 0]
-    
-    # 2. Top 5 Active Technicians (by completed checkins in current month)
-    top_techs = db.query(
-        User.name,
-        func.count(Checkin.id).label("checkin_count"),
-        func.sum(func.coalesce(Checkin.duracao_minutos, 0) / 60).label("total_hours")
-    ).join(Checkin).filter(
-        Checkin.data_inicio >= first_day_of_month,
-        Checkin.status == CheckinStatus.CONCLUIDO
-    ).group_by(User.id, User.name).order_by(func.count(Checkin.id).desc()).limit(5).all()
+    # Format 2. Top Technically
+    # define sort based on checkin count
+    sorted_techs = sorted(tech_stats.items(), key=lambda item: item[1]['checkins'], reverse=True)[:5]
     
     techs_data = [
         {
-            "name": t.name, 
-            "checkins": t.checkin_count, 
-            "hours": round(float(t.total_hours or 0), 1)
+            "name": name, 
+            "checkins": stats["checkins"], 
+            "hours": round(stats["hours"], 1)
         } 
-        for t in top_techs
+        for name, stats in sorted_techs
     ]
     
     # 3. Project Status Overview
