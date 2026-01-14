@@ -128,15 +128,18 @@ class CheckinService:
         if data.end_time:
             checkin.data_fim = data.end_time.date()
             checkin.hora_fim = data.end_time.time()
+            checkin.status = CheckinStatus.CONCLUIDO
             
         if data.observations:
             checkin.observacoes = data.observations
             
         # Recalculate duration if start or end changed
-        if (data.start_time or data.end_time) and checkin.data_inicio and checkin.hora_inicio and checkin.data_fim and checkin.hora_fim:
+        if checkin.data_inicio and checkin.hora_inicio and checkin.data_fim and checkin.hora_fim:
             start = datetime.combine(checkin.data_inicio, checkin.hora_inicio)
             end = datetime.combine(checkin.data_fim, checkin.hora_fim)
-            checkin.duracao_minutos = int((end - start).total_seconds() / 60)
+            # Handle duration across midnight or plain calculation
+            duration = (end - start).total_seconds() / 60
+            checkin.duracao_minutos = int(duration) if duration > 0 else 0
             
         return self.repository.update(checkin)
 
