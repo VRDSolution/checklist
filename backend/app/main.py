@@ -3,14 +3,21 @@ FastAPI main application
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi import Request
 import os
+
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from app.core.config import settings
 from app.api.v1.router import api_router
 from app.core.middleware import RequestIDMiddleware
 from app.core.logging import get_logger
+from app.core.limiter import limiter
 
 # Import all models to ensure SQLAlchemy relationships are resolved
 from app.db import base  # noqa: F401
@@ -28,6 +35,10 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# Connect limiter to app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # CORS middleware - configure allowed origins based on environment
 allowed_origins = settings.allowed_origins
 
@@ -35,8 +46,20 @@ allowed_origins = settings.allowed_origins
 if settings.environment == "development":
     allowed_origins = ["*"]
 
+# Security Headers Middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
 # Add Request ID middleware FIRST (before CORS) for proper header propagation
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"]) # Configure specific hosts in production
 
 app.add_middleware(
     CORSMiddleware,

@@ -3,12 +3,13 @@ Authentication endpoints
 """
 from datetime import timedelta
 from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_active_user, get_db
 from app.core.config import settings
+from app.core.limiter import limiter
 from app.core.security import (
     create_access_token, 
     create_refresh_token,
@@ -35,7 +36,9 @@ logger = get_logger(__name__)
 
 
 @router.post("/login", response_model=TokenResponse)
+@limiter.limit("5/minute")
 async def login(
+    request: Request,
     login_data: LoginRequest,
     db: Session = Depends(get_db)
 ) -> Any:
@@ -43,6 +46,7 @@ async def login(
     Login endpoint - authenticate user and return JWT token.
     
     Security: Uses structured logging without exposing sensitive data.
+    Rate Limit: 5 requests per minute.
     """
     logger.info("login_attempt", email=login_data.email)
     
@@ -90,12 +94,15 @@ async def login(
 
 
 @router.post("/refresh", response_model=TokenResponse)
+@limiter.limit("10/minute")
 async def refresh_token(
+    request: Request,
     refresh_data: RefreshTokenRequest,
     db: Session = Depends(get_db)
 ) -> Any:
     """
     Refresh token endpoint - get new access token using refresh token.
+    Rate Limit: 10 requests per minute.
     """
     try:
         payload = verify_token(refresh_data.refresh_token)

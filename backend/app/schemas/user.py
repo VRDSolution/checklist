@@ -1,9 +1,10 @@
 """
 User schemas for API serialization
 """
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
 from typing import Optional, List
 from datetime import datetime
+import re
 from app.models.user import UserRole
 
 
@@ -16,7 +17,18 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     """Schema for creating a new user."""
-    password: str = Field(..., min_length=6, max_length=50, description="User password")
+    password: str = Field(..., min_length=8, max_length=50, description="User password")
+
+    @field_validator('password')
+    @classmethod
+    def validate_password_complexity(cls, v: str) -> str:
+        if not re.search(r"\d", v):
+            raise ValueError("A senha deve conter pelo menos um número")
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("A senha deve conter pelo menos uma letra maiúscula")
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
+            raise ValueError("A senha deve conter pelo menos um caractere especial")
+        return v
 
 
 class UserUpdate(BaseModel):
@@ -30,7 +42,18 @@ class UserUpdate(BaseModel):
 class UserPasswordUpdate(BaseModel):
     """Schema for updating user password."""
     current_password: str = Field(..., description="Current password")
-    new_password: str = Field(..., min_length=6, max_length=50, description="New password")
+    new_password: str = Field(..., min_length=8, max_length=50, description="New password")
+
+    @field_validator('new_password')
+    @classmethod
+    def validate_password_complexity(cls, v: str) -> str:
+        if not re.search(r"\d", v):
+            raise ValueError("A senha deve conter pelo menos um número")
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("A senha deve conter pelo menos uma letra maiúscula")
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
+            raise ValueError("A senha deve conter pelo menos um caractere especial")
+        return v
 
 
 class UserResponse(UserBase):

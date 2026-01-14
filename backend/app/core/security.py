@@ -15,7 +15,8 @@ import bcrypt
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt."""
     # return pwd_context.hash(password)
-    salt = bcrypt.gensalt()
+    # Using 12 rounds of salt (work factor)
+    salt = bcrypt.gensalt(rounds=12)
     return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
 
