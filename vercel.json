@@ -3,14 +3,17 @@
   "builds": [
     {
       "src": "api/index.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb",
+        "runtime": "python3.9"
+      }
     },
     {
       "src": "frontend/package.json",
-      "use": "@vercel/python",
+      "use": "@vercel/static-build",
       "config": {
-          "maxLambdaSize": "15mb",
-          "runtime": "python3.9"
+        "distDir": "dist"
       }
     }
   ],
