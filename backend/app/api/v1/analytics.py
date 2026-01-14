@@ -30,15 +30,17 @@ async def get_dashboard_analytics(
         # Fetch checkins for the current month with relations needed
         # We select specific columns to avoid 'duracao_minutos' column error in SELECT *
         month_checkins = db.query(
-            Checkin.id, 
-            Checkin.data_inicio, 
-            Checkin.hora_inicio, 
-            Checkin.data_fim, 
-            Checkin.hora_fim, 
+            Checkin.id,
+            Checkin.data_inicio,
+            Checkin.hora_inicio,
+            Checkin.data_fim,
+            Checkin.hora_fim,
             Checkin.status,
+            Checkin.user_id,
+            Checkin.project_id,
             User.name.label('user_name'),
             Project.nome.label('project_name')
-        ).join(Project).join(User).filter(
+        ).join(Project, Project.id == Checkin.project_id).join(User, User.id == Checkin.user_id).filter(
             Checkin.data_inicio >= first_day_of_month,
             Checkin.status == CheckinStatus.CONCLUIDO
         ).all()
