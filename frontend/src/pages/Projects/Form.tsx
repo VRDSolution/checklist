@@ -162,8 +162,10 @@ export const ProjectFormScreen = ({
                     end_date_planned: formData.endDate || undefined
                 }
 
-                // Include status if it was changed
-                if (formData.status) {
+                // Include status ONLY if it was changed
+                // This prevents 422 errors if backend is outdated or if status field triggers validation
+                const currentStatus = fetchedProject?.status || initialData.status
+                if (formData.status && formData.status !== currentStatus) {
                     updates.status = statusMap[formData.status] || formData.status
                 }
 
