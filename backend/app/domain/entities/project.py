@@ -175,6 +175,34 @@ class Project:
         if reason:
             self.observations = f"[CANCELADO] {reason}\n{self.observations or ''}"
     
+    def force_status_change(self, new_status: ProjectStatus) -> None:
+        """
+        Force status change without transition validation.
+        
+        Use Case: Administrative corrections, manual interventions.
+        Bypasses the state machine rules enforced by start/pause/complete/cancel.
+        
+        Args:
+            new_status: Target status to set directly
+            
+        Business Logic:
+        - If transitioning to CONCLUIDO, sets end_date_actual if not already set
+        - If transitioning away from CONCLUIDO, clears end_date_actual
+        """
+        old_status = self.status
+        self.status = new_status
+        
+        # Handle end_date_actual based on new status
+        if new_status == ProjectStatus.CONCLUIDO:
+            if not self.end_date_actual:
+                self.end_date_actual = date.today()
+        else:
+            # Clear completion date if moving away from completed status
+            self.end_date_actual = None
+        
+        # Note: No InvalidStateTransitionError is raised - this is intentional
+        # This method is for administrative overrides
+    
     # ========================================
     # Query Methods (Read-only properties)
     # ========================================

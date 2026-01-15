@@ -43,8 +43,10 @@ export interface CreateProjectRequest {
   client_id: number
   responsible_user_id: number
   start_date?: string
-  end_date?: string
+  end_date_planned?: string
   status?: ProjectStatus | string
+  estimated_value?: string
+  observations?: string
 }
 
 export interface CreateTaskRequest {

@@ -167,7 +167,8 @@ async def update_project(
     """
     Update project details.
     
-    Business Rule: Cannot update completed/cancelled projects.
+    Business Rule: Cannot update completed/cancelled projects unless status is provided.
+    If status is provided, it will force the status change regardless of current state.
     
     Returns:
         200: Project updated successfully
@@ -182,7 +183,8 @@ async def update_project(
             description=request.description,
             end_date_planned=request.end_date_planned,
             observations=request.observations,
-            estimated_value=request.estimated_value
+            estimated_value=request.estimated_value,
+            status=request.status
         )
         
         return ProjectResponse.from_domain(project)

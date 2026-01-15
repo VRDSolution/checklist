@@ -254,12 +254,14 @@ class ProjectService:
         description: Optional[str] = None,
         end_date_planned: Optional[date] = None,
         observations: Optional[str] = None,
-        estimated_value: Optional[str] = None
+        estimated_value: Optional[str] = None,
+        status: Optional[ProjectStatus] = None
     ) -> Project:
         """
         Update project details with cache invalidation.
         
         Business Rule: Cannot modify completed/cancelled projects (enforced by domain).
+        Exception: If status is provided, force_status_change bypasses restrictions.
         
         Args:
             project_id: Project to update
@@ -268,18 +270,30 @@ class ProjectService:
             end_date_planned: New planned end date (optional)
             observations: New observations (optional)
             estimated_value: New estimated value (optional)
+            status: Force new status (optional, bypasses transition rules)
             
         Returns:
             Updated project
             
         Raises:
             ProjectNotFoundError: If project doesn't exist
-            BusinessRuleViolationError: If trying to modify immutable project
+            BusinessRuleViolationError: If trying to modify immutable project (unless status override)
         """
         # Retrieve existing project (will use cache if available)
         project = await self.get_project(project_id)
         
-        # Use domain method to update (enforces business rules)
+        # Handle status change first (if provided) - bypasses normal restrictions
+        if status is not None:
+            project.force_status_change(status)
+            logger.info(
+                "project_status_forced",
+                project_id=project_id,
+                new_status=status.value
+            )
+        
+        # Use domain method to update other fields (enforces business rules)
+        # Note: If project was completed/cancelled and status wasn't changed,
+        # update_details will raise BusinessRuleViolationError
         project.update_details(
             name=name,
             description=description,

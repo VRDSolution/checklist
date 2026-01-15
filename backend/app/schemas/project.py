@@ -82,6 +82,7 @@ class ProjectUpdateRequest(BaseModel):
     end_date_planned: Optional[date] = None
     estimated_value: Optional[str] = Field(None, max_length=20)
     observations: Optional[str] = Field(None, max_length=5000)
+    status: Optional[ProjectStatus] = Field(None, description="Force status change (bypasses transition rules)")
     
     @field_validator('name')
     @classmethod

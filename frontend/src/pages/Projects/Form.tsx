@@ -147,61 +147,40 @@ export const ProjectFormScreen = ({
         if (initialData && initialData.id) {
             const loadingToast = toast.loading('Salvando alterações...')
             try {
-                // 1. Handle Status Change
-                // Use fetchedProject if available for most recent status, fallback to initialData, then null
-                const currentStatus = fetchedProject?.status || initialData.status
-                const newStatus = formData.status
-
-                console.log(`[ProjectUpdate] ID: ${initialData.id}, Current: ${currentStatus}, New: ${newStatus}`)
-
-                let statusChanged = false
-
-                if (newStatus && newStatus !== currentStatus) {
-                    try {
-                        if (newStatus === 'Em Andamento') {
-                           if (currentStatus === 'Planejamento' || currentStatus === 'Pausado') {
-                               await projectService.start(initialData.id)
-                               statusChanged = true
-                           }
-                        } else if (newStatus === 'Pausado') {
-                            if (currentStatus === 'Em Andamento') {
-                                await projectService.pause(initialData.id)
-                                statusChanged = true
-                            }
-                        } else if (newStatus === 'Concluído') {
-                             if (currentStatus === 'Em Andamento' || currentStatus === 'Pausado') {
-                                await projectService.complete(initialData.id)
-                                statusChanged = true
-                             }
-                        }
-                    } catch (statusError) {
-                         console.error('Failed to update status', statusError)
-                         toast.error('Não foi possível alterar o status. Verifique as regras.', { id: loadingToast })
-                         // If status fails, we might stop here? No, let's try to update fields.
-                    }
+                // Map frontend status labels to backend enum values
+                const statusMap: Record<string, string> = {
+                    'Em Andamento': 'em_andamento',
+                    'Concluído': 'concluido',
+                    'Pausado': 'pausado',
+                    'Planejamento': 'planejamento',
+                    'Cancelado': 'cancelado'
                 }
 
-                // 2. Handle Data Update
-                const updates = {
+                const updates: any = {
                     name: formData.name,
                     description: formData.observations,
                     end_date_planned: formData.endDate || undefined
                 }
+
+                // Include status if it was changed
+                if (formData.status) {
+                    updates.status = statusMap[formData.status] || formData.status
+                }
+
+                console.log(`[ProjectUpdate] ID: ${initialData.id}, Updates:`, updates)
 
                 await saveProjectChanges({
                     id: initialData.id,
                     updates: updates
                 })
                 
-                // Force invalidation of the specific project query to ensure UI refresh
+                // Force invalidation to ensure UI refresh
                 queryClient.invalidateQueries({ queryKey: projectKeys.detail(initialData.id) })
 
                 toast.success('Projeto salvo com sucesso!', { id: loadingToast })
 
                 if (onProjectSaved) {
-                    // Update the optimistically passed back object as well
                     const updatedProject = { ...initialData, ...formData } as Project
-                    if (statusChanged && newStatus) updatedProject.status = newStatus
                     onProjectSaved(updatedProject)
                 } else {
                     onNavigate('projectDetail')
