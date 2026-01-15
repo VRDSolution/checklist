@@ -178,12 +178,25 @@ export const ProjectDetailScreen = ({
     }
 
     try {
+      const updates: any = { name: tempName }
+      
+      // Map frontend status labels to backend enum values
+      const statusMap: Record<string, string> = {
+        'Em Andamento': 'em_andamento',
+        'Concluído': 'concluido',
+        'Pausado': 'pausado',
+        'Planejamento': 'planejamento',
+        'Cancelado': 'cancelado'
+      }
+
+      // Only send status if it changed
+      if (tempStatus !== selectedProject.status) {
+        updates.status = statusMap[tempStatus] || tempStatus
+      }
+
       await updateProject.mutateAsync({
         id: selectedProject.id,
-        updates: { 
-          name: tempName,
-          status: tempStatus
-        }
+        updates: updates
       })
       setIsEditingName(false)
     } catch (error) {
