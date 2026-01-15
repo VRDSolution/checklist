@@ -10,8 +10,9 @@ import { Screen, Project } from '../../types/mobile'
 import { useData } from '../../contexts/DataContext'
 import { clientService, userService, projectService } from '../../services/api'
 import { useParams } from 'react-router-dom'
-import { useProject, useUpdateProject } from '../../hooks/useProjects'
+import { useProject, useUpdateProject, projectKeys } from '../../hooks/useProjects'
 import { toast } from 'react-hot-toast'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface ProjectFormScreenProps {
   onNavigate: (screen: Screen) => void
@@ -29,6 +30,7 @@ export const ProjectFormScreen = ({
   const { addProject } = useData()
   const { mutateAsync: saveProjectChanges } = useUpdateProject()
   const { id } = useParams<{ id: string }>()
+  const queryClient = useQueryClient()
   const { data: fetchedProject, isLoading } = useProject(id || '')
 
   const [isClientModalOpen, setIsClientModalOpen] = useState(false)
@@ -146,23 +148,36 @@ export const ProjectFormScreen = ({
             const loadingToast = toast.loading('Salvando alterações...')
             try {
                 // 1. Handle Status Change
+                // Use fetchedProject if available for most recent status, fallback to initialData, then null
                 const currentStatus = fetchedProject?.status || initialData.status
                 const newStatus = formData.status
+
+                console.log(`[ProjectUpdate] ID: ${initialData.id}, Current: ${currentStatus}, New: ${newStatus}`)
+
+                let statusChanged = false
 
                 if (newStatus && newStatus !== currentStatus) {
                     try {
                         if (newStatus === 'Em Andamento') {
-                            await projectService.start(initialData.id)
+                           if (currentStatus === 'Planejamento' || currentStatus === 'Pausado') {
+                               await projectService.start(initialData.id)
+                               statusChanged = true
+                           }
                         } else if (newStatus === 'Pausado') {
-                            await projectService.pause(initialData.id)
+                            if (currentStatus === 'Em Andamento') {
+                                await projectService.pause(initialData.id)
+                                statusChanged = true
+                            }
                         } else if (newStatus === 'Concluído') {
-                            await projectService.complete(initialData.id)
+                             if (currentStatus === 'Em Andamento' || currentStatus === 'Pausado') {
+                                await projectService.complete(initialData.id)
+                                statusChanged = true
+                             }
                         }
                     } catch (statusError) {
                          console.error('Failed to update status', statusError)
-                         toast.error('Erro ao atualizar status', { id: loadingToast })
-                         // We continue to save other changes even if status fails, or return? 
-                         // Let's continue but warn.
+                         toast.error('Não foi possível alterar o status. Verifique as regras.', { id: loadingToast })
+                         // If status fails, we might stop here? No, let's try to update fields.
                     }
                 }
 
@@ -178,10 +193,15 @@ export const ProjectFormScreen = ({
                     updates: updates
                 })
                 
+                // Force invalidation of the specific project query to ensure UI refresh
+                queryClient.invalidateQueries({ queryKey: projectKeys.detail(initialData.id) })
+
                 toast.success('Projeto salvo com sucesso!', { id: loadingToast })
 
                 if (onProjectSaved) {
+                    // Update the optimistically passed back object as well
                     const updatedProject = { ...initialData, ...formData } as Project
+                    if (statusChanged && newStatus) updatedProject.status = newStatus
                     onProjectSaved(updatedProject)
                 } else {
                     onNavigate('projectDetail')
