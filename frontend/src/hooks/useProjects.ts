@@ -100,7 +100,7 @@ export function useCreateProject() {
           responsibleId: newProject.responsible_user_id,
           responsibleEmail: '',
           startDate: newProject.start_date || new Date().toISOString(),
-          endDate: newProject.end_date,
+          endDate: newProject.end_date_planned,
           status: 'Em Andamento',
           observations: newProject.description
         }
