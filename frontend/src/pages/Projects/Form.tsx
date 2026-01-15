@@ -8,9 +8,10 @@ import { Autocomplete, AutocompleteOption } from '../../components/ui/Autocomple
 import { ClientFormModal } from '../../components/modals/ClientFormModal'
 import { Screen, Project } from '../../types/mobile'
 import { useData } from '../../contexts/DataContext'
-import { clientService, userService } from '../../services/api'
+import { clientService, userService, projectService } from '../../services/api'
 import { useParams } from 'react-router-dom'
-import { useProject } from '../../hooks/useProjects'
+import { useProject, useUpdateProject } from '../../hooks/useProjects'
+import { toast } from 'react-hot-toast'
 
 interface ProjectFormScreenProps {
   onNavigate: (screen: Screen) => void
@@ -25,7 +26,8 @@ export const ProjectFormScreen = ({
   initialData,
   mode = 'add'
 }: ProjectFormScreenProps) => {
-  const { addProject, updateProject } = useData()
+  const { addProject } = useData()
+  const { mutateAsync: saveProjectChanges } = useUpdateProject()
   const { id } = useParams<{ id: string }>()
   const { data: fetchedProject, isLoading } = useProject(id || '')
 
@@ -141,13 +143,53 @@ export const ProjectFormScreen = ({
         }
     } else {
         if (initialData && initialData.id) {
-             const updatedProject = { ...initialData, ...formData } as Project
-             updateProject(updatedProject)
-             if (onProjectSaved) {
-                 onProjectSaved(updatedProject)
-             } else {
-                 onNavigate('projectDetail')
-             }
+            const loadingToast = toast.loading('Salvando alterações...')
+            try {
+                // 1. Handle Status Change
+                const currentStatus = fetchedProject?.status || initialData.status
+                const newStatus = formData.status
+
+                if (newStatus && newStatus !== currentStatus) {
+                    try {
+                        if (newStatus === 'Em Andamento') {
+                            await projectService.start(initialData.id)
+                        } else if (newStatus === 'Pausado') {
+                            await projectService.pause(initialData.id)
+                        } else if (newStatus === 'Concluído') {
+                            await projectService.complete(initialData.id)
+                        }
+                    } catch (statusError) {
+                         console.error('Failed to update status', statusError)
+                         toast.error('Erro ao atualizar status', { id: loadingToast })
+                         // We continue to save other changes even if status fails, or return? 
+                         // Let's continue but warn.
+                    }
+                }
+
+                // 2. Handle Data Update
+                const updates = {
+                    name: formData.name,
+                    description: formData.observations,
+                    end_date_planned: formData.endDate || undefined
+                }
+
+                await saveProjectChanges({
+                    id: initialData.id,
+                    updates: updates
+                })
+                
+                toast.success('Projeto salvo com sucesso!', { id: loadingToast })
+
+                if (onProjectSaved) {
+                    const updatedProject = { ...initialData, ...formData } as Project
+                    onProjectSaved(updatedProject)
+                } else {
+                    onNavigate('projectDetail')
+                }
+            } catch (error) {
+                console.error(error)
+                toast.error('Erro ao salvar projeto', { id: loadingToast })
+            }
         }
     }
   }
