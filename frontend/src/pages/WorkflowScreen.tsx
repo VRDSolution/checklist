@@ -237,46 +237,7 @@ export const WorkflowScreen = ({
         
         {workflowStep === 'arrived' && (
           <Button onClick={() => handleWorkflowAction('start')} variant="success" icon={Play} disabled={startCheckinMutation.isLoading}>
-            {s
-              {/* Sprint Tasks Suggestion */}
-              {suggestedTasks.length > 0 && (
-                <div>
-                   <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                    Tarefas do Sprint
-                   </h3>
-                   <div className="flex flex-col gap-2">
-                    {suggestedTasks.map(task => (
-                      <button
-                        key={task.id}
-                        onClick={() => {
-                          const isSelected = checkoutData.activities.includes(task.description)
-                          const newActivities = isSelected 
-                            ? checkoutData.activities.filter(a => a !== task.description)
-                            : [...checkoutData.activities, task.description]
-                          setCheckoutData({...checkoutData, activities: newActivities})
-                        }}
-                        className={`text-left p-3 rounded-lg text-sm border transition-all ${
-                          checkoutData.activities.includes(task.description)
-                            ? 'bg-blue-50 border-blue-500 text-blue-900 shadow-sm'
-                            : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'
-                        }`}
-                      >
-                         <div className="flex items-start gap-3">
-                           <div className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center flex-none ${
-                             checkoutData.activities.includes(task.description) ? 'bg-blue-500 border-blue-500' : 'border-slate-300'
-                           }`}>
-                             {checkoutData.activities.includes(task.description) && <CheckCircle size={10} className="text-white" />}
-                           </div>
-                           <span>{task.description}</span>
-                         </div>
-                      </button>
-                    ))}
-                   </div>
-                </div>
-              )}
-
-              tartCheckinMutation.isLoading ? 'Iniciando...' : 'Iniciar Serviço'}
+            {startCheckinMutation.isLoading ? 'Iniciando...' : 'Iniciar Serviço'}
           </Button>
         )}
 
@@ -335,6 +296,44 @@ export const WorkflowScreen = ({
                   value={checkoutData.obs}
                   onChange={(e) => setCheckoutData({...checkoutData, obs: e.target.value})}
                 />
+              {/* Sprint Tasks Suggestion */}
+              {suggestedTasks.length > 0 && (
+                <div>
+                   <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                    Tarefas do Sprint
+                   </h3>
+                   <div className="flex flex-col gap-2">
+                    {suggestedTasks.map(task => (
+                      <button
+                        key={task.id}
+                        onClick={() => {
+                          const isSelected = checkoutData.activities.includes(task.description)
+                          const newActivities = isSelected 
+                            ? checkoutData.activities.filter(a => a !== task.description)
+                            : [...checkoutData.activities, task.description]
+                          setCheckoutData({...checkoutData, activities: newActivities})
+                        }}
+                        className={`text-left p-3 rounded-lg text-sm border transition-all ${
+                          checkoutData.activities.includes(task.description)
+                            ? 'bg-blue-50 border-blue-500 text-blue-900 shadow-sm'
+                            : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'
+                        }`}
+                      >
+                         <div className="flex items-start gap-3">
+                           <div className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center flex-none ${
+                             checkoutData.activities.includes(task.description) ? 'bg-blue-500 border-blue-500' : 'border-slate-300'
+                           }`}>
+                             {checkoutData.activities.includes(task.description) && <CheckCircle size={10} className="text-white" />}
+                           </div>
+                           <span>{task.description}</span>
+                         </div>
+                      </button>
+                    ))}
+                   </div>
+                </div>
+              )}
+
               </div>
             </Card>
             <Button onClick={finishCheckin} variant="success" icon={CheckCircle} disabled={stopCheckinMutation.isLoading}>
