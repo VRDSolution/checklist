@@ -296,8 +296,6 @@ export const WorkflowScreen = ({
               )}
 
               <div>
-              {/* Sprint Tasks Suggestion */}
-              {suggestedTasks.length > 0 && (
                 <div>
                    <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
@@ -334,7 +332,8 @@ export const WorkflowScreen = ({
                 </div>
               )}
 
-              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1.5">Observações Gerais</label>
             </Card>
             <Button onClick={finishCheckin} variant="success" icon={CheckCircle} disabled={stopCheckinMutation.isLoading}>
               {stopCheckinMutation.isLoading ? 'Finalizando...' : 'Finalizar Apontamento'}
