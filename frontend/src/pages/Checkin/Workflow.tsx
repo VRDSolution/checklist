@@ -100,6 +100,35 @@ export const WorkflowScreen = ({
     }
   }, [activeCheckin, selectedProject, setWorkflowStep])
 
+  // Fetch active sprint tasks when entering checkout
+  useEffect(() => {
+    const shouldFetch = workflowStep === 'checkout' && !!selectedProject?.id
+    if (!shouldFetch) return
+
+    const fetchSprintTasks = async () => {
+      setSprintTasksLoading(true)
+      try {
+        // Robust approach: fetch all sprints and filter client-side.
+        // This avoids enum/string mismatch or backend filtering issues.
+        const sprints = await sprintService.getAll(Number(selectedProject!.id))
+        const foundActiveSprint = (sprints || []).find((s) => s.status === 'in_progress') || null
+
+        setActiveSprint(foundActiveSprint)
+
+        const pendingTasks = (foundActiveSprint?.tasks || []).filter((t) => !t.is_completed)
+        setSuggestedTasks(pendingTasks)
+      } catch (error) {
+        console.error('Failed to fetch sprint tasks', error)
+        setActiveSprint(null)
+        setSuggestedTasks([])
+      } finally {
+        setSprintTasksLoading(false)
+      }
+    }
+
+    fetchSprintTasks()
+  }, [workflowStep, selectedProject?.id])
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -154,35 +183,6 @@ export const WorkflowScreen = ({
       setWorkflowStep('checkout')
     }
   }
-
-  // Fetch active sprint tasks when entering checkout
-  useEffect(() => {
-    const shouldFetch = workflowStep === 'checkout' && !!selectedProject?.id
-    if (!shouldFetch) return
-
-    const fetchSprintTasks = async () => {
-      setSprintTasksLoading(true)
-      try {
-        // Robust approach: fetch all sprints and filter client-side.
-        // This avoids enum/string mismatch or backend filtering issues.
-        const sprints = await sprintService.getAll(Number(selectedProject!.id))
-        const foundActiveSprint = (sprints || []).find((s) => s.status === 'in_progress') || null
-
-        setActiveSprint(foundActiveSprint)
-
-        const pendingTasks = (foundActiveSprint?.tasks || []).filter((t) => !t.is_completed)
-        setSuggestedTasks(pendingTasks)
-      } catch (error) {
-        console.error('Failed to fetch sprint tasks', error)
-        setActiveSprint(null)
-        setSuggestedTasks([])
-      } finally {
-        setSprintTasksLoading(false)
-      }
-    }
-
-    fetchSprintTasks()
-  }, [workflowStep, selectedProject?.id])
 
   const finishCheckin = async () => {
     if (!selectedProject || !timestamps.start || !timestamps.end) return
