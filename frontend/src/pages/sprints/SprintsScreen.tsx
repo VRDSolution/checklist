@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Calendar, CheckCircle, Circle, Trash2, MoreVertical, X, ArrowLeft, Folder, ChevronRight, Edit } from 'lucide-react';
+import { Plus, Calendar, CheckCircle, Circle, Trash2, MoreVertical, X, ArrowLeft, Folder, ChevronRight, Edit, Printer } from 'lucide-react';
+import { useReactToPrint } from 'react-to-print';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
@@ -7,6 +8,7 @@ import { Input } from '../../components/ui/Input';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { useSprints } from '../../hooks/useSprints';
 import { SprintStatus, CreateSprint, Sprint } from '../../types/sprint.types';
+import { SprintPrintView } from '../../components/sprints/SprintPrintView';
 import { useData } from '../../contexts/DataContext';
 import { format, isValid } from 'date-fns';
 
@@ -49,6 +51,28 @@ export const SprintsScreen: React.FC<SprintsScreenProps> = ({ onNavigate }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingSprint, setEditingSprint] = useState<Sprint | null>(null);
+  
+  // Print functionality
+  const [sprintsToPrint, setSprintsToPrint] = useState<Sprint[]>([]);
+  const printRef = React.useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+    documentTitle: 'Sprint-Card',
+    onAfterPrint: () => setSprintsToPrint([]), // Clear state after printing
+  });
+
+  // Trigger print when data is set
+  React.useEffect(() => {
+    if (sprintsToPrint.length > 0) {
+      handlePrint();
+    }
+  }, [sprintsToPrint, handlePrint]);
+
+  const triggerPrintSprint = (sprint: Sprint) => {
+    setSprintsToPrint([sprint]);
+  };
+
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [formData, setFormData] = useState<Partial<CreateSprint>>({
     title: '',
@@ -270,6 +294,13 @@ export const SprintsScreen: React.FC<SprintsScreenProps> = ({ onNavigate }) => {
                       }`}>
                         {getStatusLabel(sprint.status || 'planned')}
                       </span>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); triggerPrintSprint(sprint); }}
+                        className="text-gray-500 hover:text-gray-700 mx-1"
+                        title="Imprimir Card"
+                      >
+                       <Printer className="w-4 h-4" />
+                      </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleEditSprint(sprint); }}
                         className="text-blue-500 hover:text-blue-700"
@@ -502,6 +533,11 @@ export const SprintsScreen: React.FC<SprintsScreenProps> = ({ onNavigate }) => {
           </div>
         </form>
       </Modal>
+
+      {/* Hidden Print Component */}
+      <div style={{ display: 'none' }}>
+        <SprintPrintView ref={printRef} sprints={sprintsToPrint} />
+      </div>
     </div>
   );
 };
