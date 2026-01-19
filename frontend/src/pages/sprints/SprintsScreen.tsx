@@ -296,14 +296,14 @@ export const SprintsScreen: React.FC<SprintsScreenProps> = ({ onNavigate }) => {
                       </span>
                       <button 
                         onClick={(e) => { e.stopPropagation(); triggerPrintSprint(sprint); }}
-                        className="text-gray-500 hover:text-gray-700 mx-1"
-                        title="Imprimir Card"
+                        className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors mx-1"
+                        title="Imprimir / Salvar PDF"
                       >
                        <Printer className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleEditSprint(sprint); }}
-                        className="text-blue-500 hover:text-blue-700"
+                        className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors"
                         title="Editar Sprint"
                       >
                         <Edit className="w-4 h-4" />
