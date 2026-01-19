@@ -2,8 +2,11 @@ import { api } from './api';
 import { Sprint, SprintTask, CreateSprint, UpdateSprintStatus, UpdateSprintTask } from '@/types';
 
 export const sprintService = {
-  getAll: async (projectId?: number) => {
-    const params = projectId ? { project_id: projectId } : {};
+  getAll: async (projectId?: number, status?: string) => {
+    const params: any = {};
+    if (projectId) params.project_id = projectId;
+    if (status) params.status = status;
+    
     const response = await api.get<Sprint[]>('/sprints/', { params });
     return response.data;
   },
