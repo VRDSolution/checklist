@@ -257,45 +257,45 @@ export const WorkflowScreen = ({
         {workflowStep === 'checkout' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
             <Card className="p-6 space-y-6">
-              <div>
-                <h3 className="font-bold text-slate-800 mb-3">Atividades Realizadas</h3>
-                <div className="flex flex-wrap gap-2">
-                  {ACTIVITY_TAGS.map(tag => (
-                    <button
-                      key={tag}
-                      onClick={() => {
-                        const newTags = checkoutData.activities.includes(tag) 
-                          ? checkoutData.activities.filter((t: string) => t !== tag)
-                          : [...checkoutData.activities, tag]
-                        setCheckoutData({...checkoutData, activities: newTags})
-                      }}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
-                        checkoutData.activities.includes(tag)
-                          ? 'bg-blue-900 text-white border-blue-900'
-                          : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-blue-300'
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
+              {/* Sprint Tasks Suggestion */}
+              {suggestedTasks.length > 0 && (
+                <div>
+                   <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                    Tarefas do Sprint
+                   </h3>
+                   <div className="flex flex-col gap-2">
+                    {suggestedTasks.map(task => (
+                      <button
+                        key={task.id}
+                        onClick={() => {
+                          const isSelected = checkoutData.activities.includes(task.description)
+                          const newActivities = isSelected 
+                            ? checkoutData.activities.filter(a => a !== task.description)
+                            : [...checkoutData.activities, task.description]
+                          setCheckoutData({...checkoutData, activities: newActivities})
+                        }}
+                        className={`text-left p-3 rounded-lg text-sm border transition-all ${
+                          checkoutData.activities.includes(task.description)
+                            ? 'bg-blue-50 border-blue-500 text-blue-900 shadow-sm'
+                            : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'
+                        }`}
+                      >
+                         <div className="flex items-start gap-3">
+                           <div className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center flex-none ${
+                             checkoutData.activities.includes(task.description) ? 'bg-blue-500 border-blue-500' : 'border-slate-300'
+                           }`}>
+                             {checkoutData.activities.includes(task.description) && <CheckCircle size={10} className="text-white" />}
+                           </div>
+                           <span>{task.description}</span>
+                         </div>
+                      </button>
+                    ))}
+                   </div>
                 </div>
-              </div>
-              
-              <Input 
-                label="Outras Atividades" 
-                placeholder="Descreva se necessário..." 
-                value={checkoutData.other} 
-                onChange={(e) => setCheckoutData({...checkoutData, other: e.target.value})} 
-              />
-              
+              )}
+
               <div>
-                <label className="block text-sm font-medium text-slate-600 mb-1.5">Observações Gerais</label>
-                <textarea 
-                  className="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-900 outline-none"
-                  rows={3}
-                  value={checkoutData.obs}
-                  onChange={(e) => setCheckoutData({...checkoutData, obs: e.target.value})}
-                />
               {/* Sprint Tasks Suggestion */}
               {suggestedTasks.length > 0 && (
                 <div>
