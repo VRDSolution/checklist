@@ -154,14 +154,23 @@ export const WorkflowScreen = ({
   }
 // Fetch active sprint tasks when entering checkout
   useEffect(() => {
-    if (workflowStep === 'checkout' && selectedProject?.id) {
+    // Also fetch if we are already in checkout (e.g. reload)
+    // We check workflowStep OR if timestamps.end is set
+    const isCheckout = workflowStep === 'checkout' || (timestamps.end && !timestamps.start) || internalStep === 'checkout'
+    
+    if (isCheckout && selectedProject?.id) {
+      console.log('Fetching tasks for project:', selectedProject.id)
       const fetchSprintTasks = async () => {
         try {
           const sprints = await sprintService.getAll(Number(selectedProject.id), 'in_progress')
+          console.log('Sprints found:', sprints)
           if (sprints && sprints.length > 0) {
             // Get pending tasks from the first active sprint
             const tasks = sprints[0].tasks.filter(t => !t.is_completed)
+            console.log('Pending tasks:', tasks)
             setSuggestedTasks(tasks)
+          } else {
+             console.log('No active sprints found.')
           }
         } catch (error) {
           console.error('Failed to fetch sprint tasks', error)
@@ -169,9 +178,7 @@ export const WorkflowScreen = ({
       }
       fetchSprintTasks()
     }
-  }, [workflowStep, selectedProject?.id])
-
-  
+  }, [workflowStep, selectedProject?.id, timestamps.end, internalStep])
   const finishCheckin = async () => {
     if (!selectedProject || !timestamps.start || !timestamps.end) return
     
