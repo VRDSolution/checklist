@@ -10,6 +10,8 @@ import { ACTIVITY_TAGS } from '../../constants'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useProject } from '../../hooks/useProjects'
 import { useStartCheckin, useStopCheckin } from '../../hooks/useCheckins'
+import { sprintService } from '../../services/sprint.service'
+import { Sprint, SprintTask } from '../../types/sprint.types'
 import toast from 'react-hot-toast'
 
 interface WorkflowScreenProps {
@@ -42,6 +44,9 @@ export const WorkflowScreen = ({
   
   const [timestamps, setTimestamps] = useState<{arrival?: string, start?: string, end?: string}>({})
   const [checkoutData, setCheckoutData] = useState({ activities: [] as string[], other: '', obs: '' })
+  const [suggestedTasks, setSuggestedTasks] = useState<SprintTask[]>([])
+  const [sprintTasksLoading, setSprintTasksLoading] = useState(false)
+  const [activeSprint, setActiveSprint] = useState<Sprint | null>(null)
 
   // Mutations
   const startCheckinMutation = useStartCheckin()
@@ -150,6 +155,35 @@ export const WorkflowScreen = ({
     }
   }
 
+  // Fetch active sprint tasks when entering checkout
+  useEffect(() => {
+    const shouldFetch = workflowStep === 'checkout' && !!selectedProject?.id
+    if (!shouldFetch) return
+
+    const fetchSprintTasks = async () => {
+      setSprintTasksLoading(true)
+      try {
+        // Robust approach: fetch all sprints and filter client-side.
+        // This avoids enum/string mismatch or backend filtering issues.
+        const sprints = await sprintService.getAll(Number(selectedProject!.id))
+        const foundActiveSprint = (sprints || []).find((s) => s.status === 'in_progress') || null
+
+        setActiveSprint(foundActiveSprint)
+
+        const pendingTasks = (foundActiveSprint?.tasks || []).filter((t) => !t.is_completed)
+        setSuggestedTasks(pendingTasks)
+      } catch (error) {
+        console.error('Failed to fetch sprint tasks', error)
+        setActiveSprint(null)
+        setSuggestedTasks([])
+      } finally {
+        setSprintTasksLoading(false)
+      }
+    }
+
+    fetchSprintTasks()
+  }, [workflowStep, selectedProject?.id])
+
   const finishCheckin = async () => {
     if (!selectedProject || !timestamps.start || !timestamps.end) return
     
@@ -235,6 +269,57 @@ export const WorkflowScreen = ({
         {workflowStep === 'checkout' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
             <Card className="p-6 space-y-6">
+              {/* Sprint Tasks Suggestion */}
+              <div>
+                <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                  Tarefas do Sprint
+                </h3>
+
+                {sprintTasksLoading ? (
+                  <p className="text-sm text-slate-500">Carregando tarefas do sprint...</p>
+                ) : !activeSprint ? (
+                  <p className="text-sm text-slate-500">Nenhum sprint em andamento para este projeto.</p>
+                ) : suggestedTasks.length === 0 ? (
+                  <p className="text-sm text-slate-500">Sprint em andamento sem tarefas pendentes.</p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {suggestedTasks.map((task) => (
+                      <button
+                        key={task.id}
+                        onClick={() => {
+                          const isSelected = checkoutData.activities.includes(task.description)
+                          const newActivities = isSelected
+                            ? checkoutData.activities.filter((a: string) => a !== task.description)
+                            : [...checkoutData.activities, task.description]
+                          setCheckoutData({ ...checkoutData, activities: newActivities })
+                        }}
+                        className={`text-left p-3 rounded-lg text-sm border transition-all ${
+                          checkoutData.activities.includes(task.description)
+                            ? 'bg-blue-50 border-blue-500 text-blue-900 shadow-sm'
+                            : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center flex-none ${
+                              checkoutData.activities.includes(task.description)
+                                ? 'bg-blue-500 border-blue-500'
+                                : 'border-slate-300'
+                            }`}
+                          >
+                            {checkoutData.activities.includes(task.description) && (
+                              <CheckCircle size={10} className="text-white" />
+                            )}
+                          </div>
+                          <span>{task.description}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div>
                 <h3 className="font-bold text-slate-800 mb-3">Atividades Realizadas</h3>
                 <div className="flex flex-wrap gap-2">
