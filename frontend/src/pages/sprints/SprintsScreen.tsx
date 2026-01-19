@@ -57,7 +57,7 @@ export const SprintsScreen: React.FC<SprintsScreenProps> = ({ onNavigate }) => {
   const printRef = React.useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
-    content: () => printRef.current,
+    contentRef: printRef,
     documentTitle: 'Sprint-Card',
     onAfterPrint: () => setSprintsToPrint([]), // Clear state after printing
   });
