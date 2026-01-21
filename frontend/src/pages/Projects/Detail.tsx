@@ -301,7 +301,13 @@ const handleExportCSV = () => {
       
       <header className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <button onClick={() => onNavigate('history')} className="p-2 hover:bg-slate-200 rounded-full no-print"><ArrowLeft /></button>
+          <button 
+            onClick={() => window.location.href = '/history'} 
+            className="p-2 hover:bg-slate-200 rounded-full no-print"
+            title="Voltar para histórico (Atualizar dados)"
+          >
+            <ArrowLeft />
+          </button>
           <div>
             {isEditingName ? (
               <div className="flex items-center gap-2 mb-1">
