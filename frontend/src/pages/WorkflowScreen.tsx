@@ -158,11 +158,17 @@ export const WorkflowScreen = ({
     // We check workflowStep OR if timestamps.end is set
     const isCheckout = workflowStep === 'checkout' || (timestamps.end && !timestamps.start) || internalStep === 'checkout'
     
+    let isMounted = true
+
     if (isCheckout && selectedProject?.id) {
       console.log('Fetching tasks for project:', selectedProject.id)
       const fetchSprintTasks = async () => {
+        // Clear tasks while loading new ones to avoid stale data
+        setSuggestedTasks([]) 
         try {
           const sprints = await sprintService.getAll(Number(selectedProject.id), 'in_progress')
+          if (!isMounted) return
+
           console.log('Sprints found:', sprints)
           if (sprints && sprints.length > 0) {
             // Get pending tasks from the first active sprint
@@ -171,13 +177,17 @@ export const WorkflowScreen = ({
             setSuggestedTasks(tasks)
           } else {
              console.log('No active sprints found.')
+             setSuggestedTasks([])
           }
         } catch (error) {
+          if (!isMounted) return
           console.error('Failed to fetch sprint tasks', error)
         }
       }
       fetchSprintTasks()
     }
+
+    return () => { isMounted = false }
   }, [workflowStep, selectedProject?.id, timestamps.end, internalStep])
   const finishCheckin = async () => {
     if (!selectedProject || !timestamps.start || !timestamps.end) return

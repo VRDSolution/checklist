@@ -42,7 +42,7 @@ export function useProjects() {
         throw error
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 0, // Always revalidate
     cacheTime: 1000 * 60 * 30, // 30 minutes
     refetchOnWindowFocus: true,
     refetchOnReconnect: true
@@ -65,7 +65,7 @@ export function useProject(id: string) {
       }
     },
     enabled: !!id,
-    staleTime: 1000 * 60 * 5
+    staleTime: 0 // Always revalidate
   })
 }
 
