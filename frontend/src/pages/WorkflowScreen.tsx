@@ -198,20 +198,26 @@ export const WorkflowScreen = ({
         let coords = null
         try {
           toast('Obtendo localização...', { icon: '📍' })
+          console.log('[Workflow] Requesting location...')
           const pos = await getCurrentLocation()
+          console.log('[Workflow] Location received:', pos)
           coords = { latitude: pos.latitude, longitude: pos.longitude }
           setStartLocation({ lat: pos.latitude, lng: pos.longitude })
         } catch (e) {
+          console.error('[Workflow] Location failed:', e)
           toast.error('Não foi possível obter a localização. Iniciando sem GPS.')
         }
-
-        await startCheckinMutation.mutateAsync({
+        
+        const payload = {
           project_id: Number(selectedProject.id),
           start_time: now,
           arrival_time: timestamps.arrival,
           latitude: coords?.latitude,
           longitude: coords?.longitude
-        })
+        }
+        console.log('[Workflow] Starting checkin with payload:', payload)
+
+        await startCheckinMutation.mutateAsync(payload)
         
         setTimestamps({ ...timestamps, start: now })
         setWorkflowStep('working')
@@ -287,13 +293,16 @@ export const WorkflowScreen = ({
       // Capture final location
       let coords = null
       try {
+        console.log('[Workflow] Requesting checkout location...')
         const pos = await getCurrentLocation()
+        console.log('[Workflow] Checkout location:', pos)
         coords = { latitude: pos.latitude, longitude: pos.longitude }
       } catch (e) {
+        console.error('[Workflow] Checkout location failed:', e)
         // Continue even if location fails on checkout
       }
 
-      await stopCheckinMutation.mutateAsync({
+      const stopPayload = {
         id: Number(activeCheckin.id),
         data: {
           end_time: timestamps.end,
@@ -302,7 +311,10 @@ export const WorkflowScreen = ({
           latitude: coords?.latitude,
           longitude: coords?.longitude
         }
-      })
+      }
+      console.log('[Workflow] Stopping checkin with payload:', stopPayload)
+
+      await stopCheckinMutation.mutateAsync(stopPayload)
       
       // Now we can clear the local state
       localStorage.removeItem(`workflow_state_${selectedProject.id}`)
