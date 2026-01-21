@@ -32,10 +32,10 @@ export interface Checkin {
   project?: { name: string } | Project
   tasks?: Task[]
   task?: Task                 // Single task reference if needed
-  start_lat?: string
-  start_lon?: string
-  end_lat?: string
-  end_lon?: string
+  start_lat?: number | string
+  start_lon?: number | string
+  end_lat?: number | string
+  end_lon?: number | string
   is_auto_checkout?: number | boolean
 }
 

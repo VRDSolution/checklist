@@ -31,8 +31,8 @@ export interface Checkin {
   observations?: string
   date: string
   userEmail: string
-  startLocation?: { lat: string, lng: string }
-  endLocation?: { lat: string, lng: string }
+  startLocation?: { lat: number | string, lng: number | string }
+  endLocation?: { lat: number | string, lng: number | string }
   isAutoCheckout?: boolean
 }
 
