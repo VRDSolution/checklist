@@ -32,6 +32,11 @@ export interface Checkin {
   project?: { name: string } | Project
   tasks?: Task[]
   task?: Task                 // Single task reference if needed
+  start_lat?: string
+  start_lon?: string
+  end_lat?: string
+  end_lon?: string
+  is_auto_checkout?: number | boolean
 }
 
 export interface Attachment {

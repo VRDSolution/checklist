@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ArrowLeft, FileText, Edit, History, Users, Plus, Trash2, FileSpreadsheet, Check, X } from 'lucide-react'
+import { ArrowLeft, FileText, Edit, History, Users, Plus, Trash2, FileSpreadsheet, Check, X, MapPin } from 'lucide-react'
 import { Card } from '../../components/ui/Card'
 import { Modal } from '../../components/ui/Modal'
 import { Input } from '../../components/ui/Input'
@@ -476,10 +476,52 @@ const handleExportCSV = () => {
               ))}
             </div>
             
-            {c.observations && (
-              <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg italic">
-                "{c.observations}"
-              </p>
+            {(c.observations || c.startLocation || c.endLocation) && (
+              <div className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg italic space-y-1">
+                {c.observations && <p>"{c.observations}"</p>}
+                
+                {(c.startLocation || c.endLocation) && (
+                  <div className="pt-2 mt-2 border-t border-slate-200 text-xs not-italic flex flex-col gap-1">
+                     {c.startLocation && (
+                       <div className="flex items-center gap-1.5 text-slate-500">
+                         <MapPin size={12} className="text-green-600" />
+                         <span className="flex gap-1">
+                           Início: 
+                           <a 
+                             href={`https://www.google.com/maps?q=${c.startLocation.lat},${c.startLocation.lng}`}
+                             target="_blank" 
+                             rel="noopener noreferrer"
+                             className="text-blue-600 hover:underline"
+                           >
+                             Ver no mapa
+                           </a>
+                         </span>
+                       </div>
+                     )}
+                     {c.endLocation && (
+                       <div className="flex items-center gap-1.5 text-slate-500">
+                         <MapPin size={12} className="text-red-600" />
+                          <span className="flex gap-1">
+                           Fim: 
+                           <a 
+                             href={`https://www.google.com/maps?q=${c.endLocation.lat},${c.endLocation.lng}`}
+                             target="_blank" 
+                             rel="noopener noreferrer"
+                             className="text-blue-600 hover:underline"
+                           >
+                             Ver no mapa
+                           </a>
+                         </span>
+                         {c.isAutoCheckout && (
+                           <span className="ml-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[10px] font-bold uppercase tracking-wider">
+                             Auto
+                           </span>
+                         )}
+                       </div>
+                     )}
+                  </div>
+                )}
+              </div>
             )}
 
             {(user?.isAdmin || user?.role === 'admin') && (
