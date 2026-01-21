@@ -302,7 +302,7 @@ const handleExportCSV = () => {
       <header className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <button 
-            onClick={() => window.location.href = '/history'} 
+            onClick={() => window.location.href = '/checklist/history'} 
             className="p-2 hover:bg-slate-200 rounded-full no-print"
             title="Voltar para histórico (Atualizar dados)"
           >
