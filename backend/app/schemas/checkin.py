@@ -115,6 +115,11 @@ class CheckinResponse(BaseModel):
                 "start_time": start_dt,
                 "checkout_time": end_dt,
                 "total_hours": total_hours,
+                "start_lat": getattr(data, 'start_lat', None),
+                "start_lon": getattr(data, 'start_lon', None),
+                "end_lat": getattr(data, 'end_lat', None),
+                "end_lon": getattr(data, 'end_lon', None),
+                "is_auto_checkout": getattr(data, 'is_auto_checkout', 0) or 0,
                 "observations": data.observacoes,
                 "status": data.status.value if hasattr(data.status, 'value') else data.status,
                 "project": project_data

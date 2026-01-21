@@ -61,6 +61,24 @@ export class CheckinMapper {
       throw new Error('CheckinMapper: Cannot map null/undefined API checkin')
     }
 
+    let observations = apiCheckin.observations
+    let activitiesFromObs: string[] = []
+    if (observations) {
+      const marker = 'Activities:'
+      const idx = observations.indexOf(marker)
+      if (idx >= 0) {
+        const before = observations.slice(0, idx).trim()
+        const after = observations.slice(idx + marker.length).trim()
+        activitiesFromObs = after ? after.split(',').map(a => a.trim()).filter(Boolean) : []
+        observations = before || undefined
+      }
+    }
+
+    const activitiesFromTasks = apiCheckin.tasks?.map(t => t.name) || []
+    const mergedActivities = [...activitiesFromObs, ...activitiesFromTasks].filter(
+      (value, index, self) => self.indexOf(value) === index
+    )
+
     return {
       id: apiCheckin.id.toString(),
       projectId: apiCheckin.project_id.toString(),
@@ -69,8 +87,8 @@ export class CheckinMapper {
       startTime: apiCheckin.start_time || apiCheckin.created_at,
       endTime: apiCheckin.checkout_time,
       totalHours: apiCheckin.total_hours ? apiCheckin.total_hours.toFixed(2) : undefined,
-      activities: apiCheckin.tasks?.map(t => t.name) || [],
-      observations: apiCheckin.observations,
+      activities: mergedActivities,
+      observations,
       date: apiCheckin.created_at,
       userEmail: apiCheckin.user?.email || '',
       startLocation: apiCheckin.start_lat && apiCheckin.start_lon ? { lat: apiCheckin.start_lat, lng: apiCheckin.start_lon } : undefined,
