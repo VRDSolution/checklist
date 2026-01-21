@@ -48,6 +48,12 @@ class CheckinResponse(BaseModel):
     # Computed fields
     arrival_time: Optional[datetime] = Field(None, validation_alias='hora_chegada', serialization_alias='arrival_time')
     start_time: Optional[datetime] = None
+    
+    start_lat: Optional[str] = None
+    start_lon: Optional[str] = None
+    end_lat: Optional[str] = None
+    end_lon: Optional[str] = None
+    is_auto_checkout: int = 0
     checkout_time: Optional[datetime] = None
     total_hours: Optional[float] = None
     observations: Optional[str] = Field(None, validation_alias='observacoes')

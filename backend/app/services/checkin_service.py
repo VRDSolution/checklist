@@ -25,7 +25,9 @@ class CheckinService:
             data_inicio=data.start_time.date(),
             hora_inicio=data.start_time.time(),
             hora_chegada=data.arrival_time.time() if data.arrival_time else data.start_time.time(),
-            status=CheckinStatus.EM_ANDAMENTO
+            status=CheckinStatus.EM_ANDAMENTO,
+            start_lat=str(data.latitude) if data.latitude is not None else None,
+            start_lon=str(data.longitude) if data.longitude is not None else None
         )
         
         try:
@@ -72,6 +74,9 @@ class CheckinService:
         checkin.duracao_minutos = duration_minutes
         checkin.status = CheckinStatus.CONCLUIDO
         checkin.observacoes = full_observations
+        checkin.end_lat = str(data.latitude) if data.latitude is not None else None
+        checkin.end_lon = str(data.longitude) if data.longitude is not None else None
+        checkin.is_auto_checkout = 1 if data.is_auto_checkout else 0
         
         return self.repository.update(checkin)
 
