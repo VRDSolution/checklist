@@ -12,6 +12,7 @@ import { useProject } from '../../hooks/useProjects'
 import { useStartCheckin, useStopCheckin } from '../../hooks/useCheckins'
 import { sprintService } from '../../services/sprint.service'
 import { Sprint, SprintTask } from '../../types/sprint.types'
+import { useGeoLocation } from '../../hooks/useGeoLocation'
 import toast from 'react-hot-toast'
 
 interface WorkflowScreenProps {
@@ -35,6 +36,7 @@ export const WorkflowScreen = ({
   const { data: fetchedProject, isLoading } = useProject(projectId || '')
   
   const selectedProject = fetchedProject || propProject
+  const { getCurrentLocation } = useGeoLocation()
 
   // Internal state if props are not provided
   const [internalStep, setInternalStep] = useState<'idle' | 'arrived' | 'working' | 'checkout'>('idle')
@@ -165,10 +167,21 @@ export const WorkflowScreen = ({
       }))
     } else if (action === 'start') {
       try {
+        let coords: { latitude: number; longitude: number } | null = null
+        try {
+          toast('Obtendo localização...', { icon: '📍' })
+          const pos = await getCurrentLocation()
+          coords = { latitude: pos.latitude, longitude: pos.longitude }
+        } catch (e) {
+          toast.error('Não foi possível obter a localização. Iniciando sem GPS.')
+        }
+
         await startCheckinMutation.mutateAsync({
           project_id: Number(selectedProject.id),
           start_time: now,
-          arrival_time: timestamps.arrival
+          arrival_time: timestamps.arrival,
+          latitude: coords?.latitude,
+          longitude: coords?.longitude
         })
         setTimestamps({ ...timestamps, start: now })
         setWorkflowStep('working')
@@ -197,12 +210,23 @@ export const WorkflowScreen = ({
       const allActivities = [...checkoutData.activities]
       if (checkoutData.other) allActivities.push(checkoutData.other)
 
+      let coords: { latitude: number; longitude: number } | null = null
+      try {
+        toast('Obtendo localização...', { icon: '📍' })
+        const pos = await getCurrentLocation()
+        coords = { latitude: pos.latitude, longitude: pos.longitude }
+      } catch (e) {
+        toast.error('Não foi possível obter a localização no checkout.')
+      }
+
       await stopCheckinMutation.mutateAsync({
         id: Number(activeCheckin.id),
         data: {
           end_time: timestamps.end,
           activities: allActivities,
-          observations: checkoutData.obs
+          observations: checkoutData.obs,
+          latitude: coords?.latitude,
+          longitude: coords?.longitude
         }
       })
       
