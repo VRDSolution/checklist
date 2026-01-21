@@ -19,11 +19,16 @@ class CheckinStart(BaseModel):
     start_time: datetime = Field(default_factory=datetime.now)
     arrival_time: Optional[datetime] = None
     user_id: Optional[int] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 class CheckinStop(BaseModel):
     end_time: datetime = Field(default_factory=datetime.now)
     activities: List[str]
     observations: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    is_auto_checkout: bool = False
 
 class CheckinUpdate(BaseModel):
     arrival_time: Optional[datetime] = None

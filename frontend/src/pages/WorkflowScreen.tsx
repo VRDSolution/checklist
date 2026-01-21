@@ -12,6 +12,7 @@ import { useProject } from '../hooks/useProjects'
 import { useStartCheckin, useStopCheckin } from '../hooks/useCheckins'
 import { sprintService } from '../services/sprint.service'
 import { SprintTask } from '../types/sprint.types'
+import { useGeoLocation } from '../hooks/useGeoLocation'
 import toast from 'react-hot-toast'
 
 interface WorkflowScreenProps {
@@ -36,6 +37,8 @@ export const WorkflowScreen = ({
   
   const selectedProject = fetchedProject || propProject
 
+  const { getCurrentLocation, calculateDistance } = useGeoLocation()
+
   // Internal state if props are not provided
   const [internalStep, setInternalStep] = useState<'idle' | 'arrived' | 'working' | 'checkout'>('idle')
   
@@ -45,6 +48,7 @@ export const WorkflowScreen = ({
   const [timestamps, setTimestamps] = useState<{arrival?: string, start?: string, end?: string}>({})
   const [checkoutData, setCheckoutData] = useState({ activities: [] as string[], other: '', obs: '' })
   const [suggestedTasks, setSuggestedTasks] = useState<SprintTask[]>([])
+  const [startLocation, setStartLocation] = useState<{lat: number, lng: number} | null>(null)
 
   // Mutations
   const startCheckinMutation = useStartCheckin()
@@ -65,6 +69,9 @@ export const WorkflowScreen = ({
           const parsed = JSON.parse(savedState)
           if (parsed.arrival) {
              arrivalTime = parsed.arrival
+          }
+           if (parsed.startLocation) {
+            setStartLocation(parsed.startLocation)
           }
         } catch (e) {
           // ignore
@@ -97,6 +104,59 @@ export const WorkflowScreen = ({
       }
     }
   }, [activeCheckin, selectedProject, setWorkflowStep])
+
+  // Geofence Monitor (Background Check)
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    
+    if (workflowStep === 'working' && startLocation) {
+      interval = setInterval(async () => {
+        try {
+          const current = await getCurrentLocation()
+          const dist = calculateDistance(
+            startLocation.lat, 
+            startLocation.lng, 
+            current.latitude, 
+            current.longitude
+          )
+          
+          console.log(`[Geofence] Dist: ${dist.toFixed(3)}km`)
+          
+          if (dist > 1.5) {
+            // Auto Checkout Logic
+            clearInterval(interval)
+            handleAutoCheckout()
+          }
+        } catch (e) {
+          console.error('[Geofence] Location error', e)
+        }
+      }, 60000) // Check every 1 minute
+    }
+
+    return () => clearInterval(interval)
+  }, [workflowStep, startLocation])
+
+  const handleAutoCheckout = async () => {
+     if (!activeCheckin) return
+     toast('Distância > 1.5km detectada. Realizando checkout automático...', { icon: '⚠️' })
+     
+     try {
+       await stopCheckinMutation.mutateAsync({
+         id: Number(activeCheckin.id),
+         data: {
+           end_time: new Date().toISOString(),
+           activities: ['Checkout Automático (Geofence)'],
+           observations: 'Sistema: Usuário se afastou mais de 1.5km do ponto de início.',
+           is_auto_checkout: true
+         }
+       })
+       localStorage.removeItem(`workflow_state_${selectedProject?.id}`)
+       refreshData()
+       navigate('/menu')
+     } catch (e) {
+       console.error('Auto checkout failed', e)
+     }
+  }
 
   if (isLoading) {
     return (
@@ -134,14 +194,36 @@ export const WorkflowScreen = ({
       }))
     } else if (action === 'start') {
       try {
+        // Capture Location
+        let coords = null
+        try {
+          toast('Obtendo localização...', { icon: '📍' })
+          const pos = await getCurrentLocation()
+          coords = { latitude: pos.latitude, longitude: pos.longitude }
+          setStartLocation({ lat: pos.latitude, lng: pos.longitude })
+        } catch (e) {
+          toast.error('Não foi possível obter a localização. Iniciando sem GPS.')
+        }
+
         await startCheckinMutation.mutateAsync({
           project_id: Number(selectedProject.id),
           start_time: now,
-          arrival_time: timestamps.arrival
+          arrival_time: timestamps.arrival,
+          latitude: coords?.latitude,
+          longitude: coords?.longitude
         })
+        
         setTimestamps({ ...timestamps, start: now })
         setWorkflowStep('working')
-        // Do NOT clear local state yet, we need arrival time for display
+        
+        // Update local state with start location as well
+        const oldState = localStorage.getItem(`workflow_state_${selectedProject.id}`)
+        const parsedState = oldState ? JSON.parse(oldState) : {}
+        localStorage.setItem(`workflow_state_${selectedProject.id}`, JSON.stringify({
+           ...parsedState,
+           startLocation: coords ? { lat: coords.latitude, lng: coords.longitude } : null
+        }))
+        
         // localStorage.removeItem(`workflow_state_${selectedProject.id}`)
         toast.success('Check-in iniciado!')
       } catch (error) {
@@ -202,17 +284,29 @@ export const WorkflowScreen = ({
       const allActivities = [...checkoutData.activities]
       if (checkoutData.other) allActivities.push(checkoutData.other)
 
+      // Capture final location
+      let coords = null
+      try {
+        const pos = await getCurrentLocation()
+        coords = { latitude: pos.latitude, longitude: pos.longitude }
+      } catch (e) {
+        // Continue even if location fails on checkout
+      }
+
       await stopCheckinMutation.mutateAsync({
         id: Number(activeCheckin.id),
         data: {
           end_time: timestamps.end,
           activities: allActivities,
-          observations: checkoutData.obs
+          observations: checkoutData.obs,
+          latitude: coords?.latitude,
+          longitude: coords?.longitude
         }
       })
       
       // Now we can clear the local state
       localStorage.removeItem(`workflow_state_${selectedProject.id}`)
+      setStartLocation(null) // clear geofence reference
       
       toast.success('Check-in finalizado com sucesso!')
       await refreshData() // Refresh history

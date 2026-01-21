@@ -42,6 +42,13 @@ class Checkin(Base):
     localizacao_inicio = Column(String(500))
     localizacao_fim = Column(String(500))
     
+    # Precise Geolocation
+    start_lat = Column(String(50), nullable=True) # Storing as String to avoid precision issues in some DBs, or Float/Decimal
+    start_lon = Column(String(50), nullable=True)
+    end_lat = Column(String(50), nullable=True)
+    end_lon = Column(String(50), nullable=True)
+    is_auto_checkout = Column(Integer, default=0) # 0 = false, 1 = true (using Integer for compatibility or Boolean)
+    
     # General observations
     observacoes = Column(Text)
     

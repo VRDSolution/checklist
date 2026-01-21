@@ -48,12 +48,18 @@ export interface Attachment {
 // Request types
 export interface CreateCheckinRequest {
   project_id: number
+  start_time?: string
+  arrival_time?: string
   description?: string
   type?: CheckinType
+  latitude?: number
+  longitude?: number
 }
 
 export interface StartServiceRequest {
   checkin_id: number
+  latitude?: number
+  longitude?: number
 }
 
 export interface CheckoutRequest {
@@ -61,4 +67,7 @@ export interface CheckoutRequest {
   task_ids: number[]          // IDs das atividades executadas
   observations?: string       // Observações do técnico
   description?: string        // Alias for observations
+  latitude?: number
+  longitude?: number
+  is_auto_checkout?: boolean
 }

@@ -229,7 +229,7 @@ class CheckinService {
   }
 
   // Iniciar check-in
-  async startCheckin(data: { project_id: number | string, start_time?: string, arrival_time?: string }): Promise<Checkin> {
+  async startCheckin(data: { project_id: number | string, start_time?: string, arrival_time?: string, latitude?: number, longitude?: number }): Promise<Checkin> {
     try {
       const response = await api.post('/checkins/start', data)
       return response.data
@@ -258,7 +258,7 @@ class CheckinService {
   }
 
   // Parar check-in
-  async stopCheckin(checkinId: number | string, data: { end_time?: string, activities: string[], observations?: string }): Promise<Checkin> {
+  async stopCheckin(checkinId: number | string, data: { end_time?: string, activities: string[], observations?: string, latitude?: number, longitude?: number, is_auto_checkout?: boolean }): Promise<Checkin> {
     try {
       const response = await api.post(`/checkins/${checkinId}/stop`, data)
       return response.data
