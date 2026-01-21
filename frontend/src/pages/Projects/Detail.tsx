@@ -9,8 +9,9 @@ import { useData } from '../../contexts/DataContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { ACTIVITY_TAGS } from '../../constants'
 import { useParams } from 'react-router-dom'
-import { useProject, useProjectContributors, useAddContributor, useRemoveContributor, useUpdateProject } from '../../hooks/useProjects'
+import { useProject, useProjectContributors, useAddContributor, useRemoveContributor, useUpdateProject, projectKeys } from '../../hooks/useProjects'
 import { userService } from '../../services/api'
+import { useQueryClient } from '@tanstack/react-query'
 
 // --- PRINT STYLES ---
 const PrintStyles = () => (
@@ -88,6 +89,14 @@ export const ProjectDetailScreen = ({
   
   const { id } = useParams<{ id: string }>()
   const { data: fetchedProject, isLoading, error } = useProject(id || '')
+  
+  const queryClient = useQueryClient()
+
+  const handleBack = async () => {
+    // Invalidate list cache to force refresh on history page
+    await queryClient.invalidateQueries({ queryKey: projectKeys.list() })
+    onNavigate('history')
+  }
   
   const selectedProject = fetchedProject || propProject
 
@@ -302,9 +311,9 @@ const handleExportCSV = () => {
       <header className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <button 
-            onClick={() => window.location.href = '/checklist/history'} 
+            onClick={handleBack} 
             className="p-2 hover:bg-slate-200 rounded-full no-print"
-            title="Voltar para histórico (Atualizar dados)"
+            title="Voltar para histórico"
           >
             <ArrowLeft />
           </button>
