@@ -87,7 +87,7 @@ export function useActiveCheckin() {
 export function useStartCheckin() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (data: { project_id: number, start_time?: string, arrival_time?: string }) => {
+    mutationFn: async (data: { project_id: number, start_time?: string, arrival_time?: string, latitude?: number, longitude?: number }) => {
       const apiCheckin = await checkinService.startCheckin(data)
       return CheckinMapper.toDomain(apiCheckin)
     },
@@ -109,7 +109,7 @@ export function useStartCheckin() {
 export function useStopCheckin() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number, data: { end_time?: string, activities: string[], observations?: string } }) => {
+    mutationFn: async ({ id, data }: { id: number, data: { end_time?: string, activities: string[], observations?: string, latitude?: number, longitude?: number, is_auto_checkout?: boolean } }) => {
       const apiCheckin = await checkinService.stopCheckin(id, data)
       return CheckinMapper.toDomain(apiCheckin)
     },
