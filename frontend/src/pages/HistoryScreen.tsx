@@ -5,6 +5,7 @@ import { SearchBar } from '../components/ui/SearchBar'
 import { Screen, Project } from '../types/mobile'
 import { useData } from '../contexts/DataContext'
 import { useAuth } from '../contexts/AuthContext'
+import { useProjects, useDeleteProject } from '../hooks/useProjects'
 
 interface HistoryScreenProps {
   onNavigate: (screen: Screen) => void
@@ -16,7 +17,13 @@ export const HistoryScreen = ({
   onSelectProject
 }: HistoryScreenProps) => {
   const { user } = useAuth()
-  const { projects, checkins, deleteProject } = useData()
+  const { checkins } = useData()
+  
+  const { data: projectsData, isLoading, error } = useProjects()
+  const deleteProjectMutation = useDeleteProject()
+
+  const projects = projectsData || []
+
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
 
@@ -25,6 +32,18 @@ export const HistoryScreen = ({
     const role = String((user as any).role || '').toLowerCase()
     return (user as any).isAdmin === true || role === 'admin' || role === 'supervisor'
   }, [user])
+
+  const handleDeleteProject = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation()
+    const ok = window.confirm('Tem certeza que deseja excluir este projeto?')
+    if (!ok) return
+    
+    try {
+      await deleteProjectMutation.mutateAsync(id)
+    } catch (error) {
+      // Error handled by mutation
+    }
+  }
 
   const filteredProjects = useMemo(() => {
     let result = projects
@@ -77,50 +96,56 @@ export const HistoryScreen = ({
           <option value="Cancelado">Cancelado</option>
         </select>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProjects.map(p => (
-          <Card key={p.id} onClick={() => { onSelectProject(p); onNavigate('projectDetail') }} className="p-6 hover:shadow-md transition-shadow cursor-pointer group">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-900">
-                <Folder size={20} />
-              </div>
-              <div className="flex items-center gap-2">
-              <span className={`px-2 py-1 rounded text-xs font-bold ${
-                p.status === 'Em Andamento' ? 'bg-emerald-100 text-emerald-700' : 
-                p.status === 'Pausado' ? 'bg-orange-100 text-orange-700' :
-                'bg-slate-100 text-slate-600'
-              }`}>
-                {p.status}
-              </span>
-              {((user as any)?.isAdmin === true || (user as any)?.role === 'admin') && (
-                <button
-                  className="text-red-500 hover:bg-red-50 p-2 rounded"
-                  title="Excluir projeto"
-                  onClick={async (e) => {
-                    e.stopPropagation()
-                    const ok = window.confirm('Tem certeza que deseja excluir este projeto?')
-                    if (!ok) return
-                    if (deleteProject) {
-                      await deleteProject(p.id)
-                    }
-                  }}
-                >
-                  <Trash2 size={16} />
-                </button>
-              )}
-              </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProjects.length === 0 && (
+            <div className="col-span-full py-12 text-center text-slate-400">
+               <Folder size={48} className="mx-auto mb-4 opacity-30" />
+               <p>Nenhum projeto encontrado.</p>
             </div>
-            <h3 className="font-bold text-slate-800 mb-1">{p.name}</h3>
-            <p className="text-sm text-slate-500 mb-1">{p.client}</p>
-            <p className="text-xs text-slate-400 mb-4">Responsável: {p.responsible}</p>
-            <div className="pt-4 border-t border-slate-100 flex justify-between items-center text-sm text-slate-500">
-              <span>{checkins.filter(c => c.projectId === p.id).length} check-ins</span>
-              <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Card>
-        ))}
-      </div>
+          )}
+
+          {filteredProjects.map(p => (
+            <Card key={p.id} onClick={() => { onSelectProject(p); onNavigate('projectDetail') }} className="p-6 hover:shadow-md transition-shadow cursor-pointer group">
+              <div className="flex justify-between items-start mb-4">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-900">
+                  <Folder size={20} />
+                </div>
+                <div className="flex items-center gap-2">
+                <span className={`px-2 py-1 rounded text-xs font-bold ${
+                  p.status === 'Em Andamento' ? 'bg-emerald-100 text-emerald-700' : 
+                  p.status === 'Pausado' ? 'bg-orange-100 text-orange-700' :
+                  'bg-slate-100 text-slate-600'
+                }`}>
+                  {p.status}
+                </span>
+                {canManageProjects && (
+                  <button
+                    className="text-red-500 hover:bg-red-50 p-2 rounded"
+                    title="Excluir projeto"
+                    onClick={(e) => handleDeleteProject(e, p.id)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+                </div>
+              </div>
+              <h3 className="font-bold text-slate-800 mb-1">{p.name}</h3>
+              <p className="text-sm text-slate-500 mb-1">{p.client}</p>
+              <p className="text-xs text-slate-400 mb-4">Responsável: {p.responsible}</p>
+              <div className="pt-4 border-t border-slate-100 flex justify-between items-center text-sm text-slate-500">
+                <span>{checkins.filter(c => c.projectId === p.id).length} check-ins</span>
+                <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
