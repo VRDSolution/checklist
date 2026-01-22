@@ -174,7 +174,8 @@ export const ProjectDetailScreen = ({
   const projectCheckins = (checkins || []).filter(c => c.projectId === selectedProject.id)
   
   // Check if user can edit this project
-  const isAdminUser = (user as any)?.isAdmin === true || user?.role === 'admin' || user?.role === 'supervisor';
+  const isAdminOnly = isAdmin || (user as any)?.isAdmin === true || user?.role === 'admin';
+  const isAdminUser = isAdminOnly || user?.role === 'supervisor';
   const canEdit = isAdminUser || user?.email === selectedProject.responsibleEmail;
 
   const handleExportPDF = () => {
@@ -422,23 +423,25 @@ const handleExportCSV = () => {
               )}
             </div>
 
-            {(isAdminUser || user?.role === 'admin') && (
+            {isAdminUser && (
               <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end items-center gap-4 no-print">
-                <button 
-                   className="text-sm font-bold text-red-600 flex items-center gap-1 hover:underline"
-                   onClick={async () => {
-                     if (window.confirm('Tem certeza que deseja excluir este registro de histórico?')) {
-                       try {
-                         await checkinService.delete(c.id)
-                         await refreshData()
-                       } catch (e) {
-                         alert('Erro ao excluir check-in')
+                {isAdminOnly && (
+                  <button 
+                     className="text-sm font-bold text-red-600 flex items-center gap-1 hover:underline"
+                     onClick={async () => {
+                       if (window.confirm('Tem certeza que deseja excluir este registro de histórico?')) {
+                         try {
+                           await checkinService.delete(c.id)
+                           await refreshData()
+                         } catch (e) {
+                           alert('Erro ao excluir check-in')
+                         }
                        }
-                     }
-                   }}
-                >
-                   <Trash2 size={14} /> Excluir
-                </button>
+                     }}
+                  >
+                     <Trash2 size={14} /> Excluir
+                  </button>
+                )}
                 <button 
                   onClick={() => setEditingCheckin(c)}
                   className="text-sm font-bold text-blue-900 flex items-center gap-1 hover:underline"
