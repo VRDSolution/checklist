@@ -10,7 +10,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { ACTIVITY_TAGS } from '../../constants'
 import { useParams } from 'react-router-dom'
 import { useProject, useProjectContributors, useAddContributor, useRemoveContributor, useUpdateProject, projectKeys } from '../../hooks/useProjects'
-import { userService, checkinService, projectService } from '../../services/api'
+import { userService, checkinService } from '../../services/api'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 
@@ -199,35 +199,24 @@ export const ProjectDetailScreen = ({
         'Cancelado': 'cancelado'
       }
 
-      const currentStatus = statusMap[selectedProject.status] || selectedProject.status.toLowerCase().replace(' ', '_')
-      const newStatus = statusMap[tempStatus] || tempStatus.toLowerCase().replace(' ', '_')
+      const currentStatus = statusMap[selectedProject.status] || selectedProject.status.toLowerCase().replace(/\s+/g, '_')
+      const newStatus = statusMap[tempStatus] || tempStatus.toLowerCase().replace(/\s+/g, '_')
       const statusChanged = newStatus !== currentStatus
       const nameChanged = tempName.trim() !== selectedProject.name
 
       if (nameChanged) {
         updates.name = tempName.trim()
+      }
+
+      if (statusChanged) {
+        updates.status = newStatus
+      }
+
+      if (Object.keys(updates).length > 0) {
         await updateProject.mutateAsync({
           id: selectedProject.id,
           updates
         })
-      }
-
-      if (statusChanged) {
-        const projectId = parseInt(selectedProject.id)
-        if (newStatus === 'em_andamento') {
-          await projectService.start(projectId)
-        } else if (newStatus === 'pausado') {
-          await projectService.pause(projectId)
-        } else if (newStatus === 'concluido') {
-          await projectService.complete(projectId)
-        } else if (newStatus === 'cancelado') {
-          await projectService.cancel(projectId)
-        } else if (newStatus === 'planejamento') {
-          await updateProject.mutateAsync({
-            id: selectedProject.id,
-            updates: { status: newStatus }
-          })
-        }
       }
 
       await queryClient.invalidateQueries({ queryKey: projectKeys.list() })
@@ -478,12 +467,10 @@ const handleExportCSV = () => {
           <Card key={c.id} className="p-5 print:break-inside-avoid">
             <div className="flex justify-between items-start mb-3">
               <div>
-                <div className="flex items-center gap-2">
+                <div>
                   <p className="font-bold text-slate-800">{new Date(c.date).toLocaleDateString()}</p>
                   {c.userName && (
-                    <span className="text-xs bg-slate-100 px-2 py-0.5 rounded-full text-slate-600 border border-slate-200">
-                      {c.userName}
-                    </span>
+                    <p className="text-xs text-slate-500">{c.userName}</p>
                   )}
                 </div>
                 <div className="text-sm text-slate-500">
