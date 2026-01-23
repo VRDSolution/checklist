@@ -12,6 +12,7 @@ import { useParams } from 'react-router-dom'
 import { useProject, useProjectContributors, useAddContributor, useRemoveContributor, useUpdateProject, projectKeys } from '../../hooks/useProjects'
 import { userService, checkinService } from '../../services/api'
 import { useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 
 // --- PRINT STYLES ---
 const PrintStyles = () => (
