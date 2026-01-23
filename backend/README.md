@@ -94,15 +94,6 @@ O script de seed cria:
 - **Clientes** de exemplo
 - **Projetos** de teste
 
-#### Usuários Padrão:
-
-| Email | Senha | Role |
-|-------|--------|------|
-| admin@vrdsolution.com | Admin@123 | Admin |
-| supervisor@vrdsolution.com | Supervisor@123 | Supervisor |
-| arthur@vrdsolution.com | Arthur@123 | Técnico |
-| diego@vrdsolution.com | Diego@123 | Técnico |
-| gui@vrdsolution.com | Gui@123 | Técnico |
 
 ## 📚 API Documentation
 

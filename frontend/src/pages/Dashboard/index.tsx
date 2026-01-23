@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useData } from '../../contexts/DataContext'
 import { Card } from '../../components/ui/Card'
 import { Screen } from '../../types/mobile'
+import { NotificationToggle } from '@/components/common/NotificationToggle'
 
 interface DashboardScreenProps {
   onNavigate: (screen: Screen) => void
@@ -25,6 +26,7 @@ export const DashboardScreen = ({ onNavigate }: DashboardScreenProps) => {
            {/* <p className="text-xs text-slate-400">Role: {user?.role}</p> */}
         </div>
         <div className="flex items-center gap-3">
+          <NotificationToggle variant="light" />
           <button 
             onClick={logout}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"

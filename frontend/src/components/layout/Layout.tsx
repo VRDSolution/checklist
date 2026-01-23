@@ -2,6 +2,7 @@ import { Outlet, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { LogOut, Settings, User } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { NotificationToggle } from '@/components/common/NotificationToggle'
 
 export function Layout() {
   const navigate = useNavigate()
@@ -27,6 +28,9 @@ export function Layout() {
 
           {/* User menu */}
           <div className="flex items-center space-x-4">
+            {/* Notifications */}
+            <NotificationToggle />
+
             {/* Theme toggle */}
             <button className="p-2 rounded-lg hover:bg-gray-700 transition-colors">
               <Settings className="w-5 h-5 text-gray-400" />
