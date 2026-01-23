@@ -39,6 +39,11 @@ class CheckinUpdate(BaseModel):
 class ProjectSummary(BaseModel):
     name: str
 
+class UserSummary(BaseModel):
+    id: int
+    name: str
+    email: str
+
 class CheckinResponse(BaseModel):
     id: int
     project_id: int = Field(..., validation_alias='projeto_id', serialization_alias='project_id')
@@ -60,6 +65,7 @@ class CheckinResponse(BaseModel):
     status: str
     
     project: Optional[ProjectSummary] = None
+    user: Optional[UserSummary] = None
     
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
@@ -105,6 +111,14 @@ class CheckinResponse(BaseModel):
             project_data = None
             if hasattr(data, 'projeto') and data.projeto:
                 project_data = {"name": data.projeto.nome}
+
+            user_data = None
+            if hasattr(data, 'usuario') and data.usuario:
+                user_data = {
+                    "id": data.usuario.id,
+                    "name": data.usuario.name,
+                    "email": data.usuario.email
+                }
             
             return {
                 "id": data.id,
@@ -122,7 +136,8 @@ class CheckinResponse(BaseModel):
                 "is_auto_checkout": getattr(data, 'is_auto_checkout', 0) or 0,
                 "observations": data.observacoes,
                 "status": data.status.value if hasattr(data.status, 'value') else data.status,
-                "project": project_data
+                "project": project_data,
+                "user": user_data
             }
         return data
 
