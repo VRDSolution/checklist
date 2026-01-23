@@ -36,10 +36,11 @@ export const useNotification = () => {
   useEffect(() => {
     let interval: NodeJS.Timeout
 
-    if (activeCheckin && permission === 'granted') {
+    if (activeCheckin && activeCheckin.startTime && permission === 'granted') {
+      const checkinStartTime = activeCheckin.startTime
       // Check every minute
       interval = setInterval(() => {
-        const startTime = new Date(activeCheckin.startTime).getTime()
+        const startTime = new Date(checkinStartTime).getTime()
         const now = new Date().getTime()
         const hoursElapsed = (now - startTime) / (1000 * 60 * 60)
 
