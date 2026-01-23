@@ -397,15 +397,6 @@ const handleExportCSV = () => {
           >
             <FileText className="text-blue-900" size={20} />
           </button>
-          {canEdit && (
-            <button 
-              onClick={() => onNavigate('editProject')} 
-              className="p-2 hover:bg-slate-200 rounded-full"
-              title="Editar Projeto"
-            >
-              <Edit className="text-blue-900" size={20} />
-            </button>
-          )}
         </div>
       </header>
 

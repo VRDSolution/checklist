@@ -294,13 +294,17 @@ class ProjectService:
         # Use domain method to update other fields (enforces business rules)
         # Note: If project was completed/cancelled and status wasn't changed,
         # update_details will raise BusinessRuleViolationError
-        project.update_details(
-            name=name,
-            description=description,
-            end_date_planned=end_date_planned,
-            observations=observations,
-            estimated_value=estimated_value
-        )
+        if any(
+            field is not None
+            for field in [name, description, end_date_planned, observations, estimated_value]
+        ):
+            project.update_details(
+                name=name,
+                description=description,
+                end_date_planned=end_date_planned,
+                observations=observations,
+                estimated_value=estimated_value
+            )
         
         # Persist changes
         updated_project = self.repository.save(project)
