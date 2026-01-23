@@ -10,7 +10,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { ACTIVITY_TAGS } from '../../constants'
 import { useParams } from 'react-router-dom'
 import { useProject, useProjectContributors, useAddContributor, useRemoveContributor, useUpdateProject, projectKeys } from '../../hooks/useProjects'
-import { userService, checkinService } from '../../services/api'
+import { userService, checkinService, projectService } from '../../services/api'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 
@@ -188,7 +188,7 @@ export const ProjectDetailScreen = ({
     }
 
     try {
-      const updates: any = { name: tempName }
+      const updates: any = {}
       
       // Map frontend status labels to backend enum values
       const statusMap: Record<string, string> = {
@@ -199,15 +199,39 @@ export const ProjectDetailScreen = ({
         'Cancelado': 'cancelado'
       }
 
-      // Only send status if it changed
-      if (tempStatus !== selectedProject.status) {
-        updates.status = statusMap[tempStatus] || tempStatus.toLowerCase().replace(' ', '_')
+      const currentStatus = statusMap[selectedProject.status] || selectedProject.status.toLowerCase().replace(' ', '_')
+      const newStatus = statusMap[tempStatus] || tempStatus.toLowerCase().replace(' ', '_')
+      const statusChanged = newStatus !== currentStatus
+      const nameChanged = tempName.trim() !== selectedProject.name
+
+      if (nameChanged) {
+        updates.name = tempName.trim()
+        await updateProject.mutateAsync({
+          id: selectedProject.id,
+          updates
+        })
       }
 
-      await updateProject.mutateAsync({
-        id: selectedProject.id,
-        updates: updates
-      })
+      if (statusChanged) {
+        const projectId = parseInt(selectedProject.id)
+        if (newStatus === 'em_andamento') {
+          await projectService.start(projectId)
+        } else if (newStatus === 'pausado') {
+          await projectService.pause(projectId)
+        } else if (newStatus === 'concluido') {
+          await projectService.complete(projectId)
+        } else if (newStatus === 'cancelado') {
+          await projectService.cancel(projectId)
+        } else if (newStatus === 'planejamento') {
+          await updateProject.mutateAsync({
+            id: selectedProject.id,
+            updates: { status: newStatus }
+          })
+        }
+      }
+
+      await queryClient.invalidateQueries({ queryKey: projectKeys.list() })
+      await queryClient.invalidateQueries({ queryKey: projectKeys.detail(selectedProject.id) })
       setIsEditingName(false)
       toast.success('Projeto atualizado com sucesso')
     } catch (error: any) {
@@ -477,14 +501,6 @@ const handleExportCSV = () => {
                 <span className="block font-mono font-bold text-blue-900">{c.totalHours}h</span>
                 <span className="text-xs text-slate-400">Total</span>
               </div>
-            </div>
-            
-            <div className="flex flex-wrap gap-2 mb-3">
-              {c.activities.map(tag => (
-                <span key={tag} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-md font-medium">
-                  {tag}
-                </span>
-              ))}
             </div>
             
             {(c.activities?.length || c.observations || c.startLocation || c.endLocation) && (

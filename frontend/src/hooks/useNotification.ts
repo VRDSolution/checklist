@@ -7,13 +7,13 @@ export const useNotification = () => {
   const [permission, setPermission] = useState<NotificationPermission>('default')
 
   useEffect(() => {
-    if ('Notification' in window) {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
       setPermission(Notification.permission)
     }
   }, [])
 
   const requestPermission = async () => {
-    if (!('Notification' in window)) {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
       logger.warn('This browser does not support desktop notification')
       return false
     }
@@ -28,8 +28,16 @@ export const useNotification = () => {
   }
 
   const sendNotification = (title: string, options?: NotificationOptions) => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      return
+    }
+
     if (Notification.permission === 'granted') {
-      new Notification(title, options)
+      try {
+        new Notification(title, options)
+      } catch (error) {
+        logger.warn('Notification failed', error as Error)
+      }
     }
   }
 
@@ -75,10 +83,18 @@ export const useNotification = () => {
     return () => clearInterval(interval)
   }, [activeCheckin, permission])
 
-  const notifyCheckin = (clientName: string) => {
-    sendNotification('✅ Check-in Realizado!', {
-      body: `Você iniciou o atendimento em: ${clientName}`,
-      icon: '/logo.png', // Fallback icon
+  const notifyArrival = (clientName: string) => {
+    sendNotification('📍 Chegada no Cliente', {
+      body: `Você chegou em: ${clientName}`,
+      icon: '/logo.png',
+      tag: 'checkin-arrival'
+    })
+  }
+
+  const notifyServiceStart = (clientName: string) => {
+    sendNotification('✅ Início do Serviço', {
+      body: `Atendimento iniciado em: ${clientName}`,
+      icon: '/logo.png',
       tag: 'checkin-start'
     })
   }
@@ -95,7 +111,8 @@ export const useNotification = () => {
     permission,
     requestPermission,
     sendNotification,
-    notifyCheckin,
+    notifyArrival,
+    notifyServiceStart,
     notifyCheckout
   }
 }

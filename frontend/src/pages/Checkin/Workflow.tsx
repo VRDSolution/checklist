@@ -38,7 +38,7 @@ export const WorkflowScreen = ({
   
   const selectedProject = fetchedProject || propProject
   const { getCurrentLocation } = useGeoLocation()
-  const { notifyCheckin, notifyCheckout } = useNotification()
+  const { notifyArrival, notifyServiceStart, notifyCheckout } = useNotification()
 
   // Internal state if props are not provided
   const [internalStep, setInternalStep] = useState<'idle' | 'arrived' | 'working' | 'checkout'>('idle')
@@ -167,6 +167,7 @@ export const WorkflowScreen = ({
         arrival: now,
         step: 'arrived'
       }))
+      notifyArrival(selectedProject.name)
     } else if (action === 'start') {
       try {
         let coords: { latitude: number; longitude: number } | null = null
@@ -190,7 +191,7 @@ export const WorkflowScreen = ({
         // Do NOT clear local state yet, we need arrival time for display
         // localStorage.removeItem(`workflow_state_${selectedProject.id}`)
         toast.success('Check-in iniciado!')
-        notifyCheckin(selectedProject.name)
+        notifyServiceStart(selectedProject.name)
       } catch (error) {
         toast.error('Erro ao iniciar check-in')
       }
