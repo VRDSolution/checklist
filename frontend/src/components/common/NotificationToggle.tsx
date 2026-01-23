@@ -37,13 +37,33 @@ export function NotificationToggle({ className = '', variant = 'dark' }: Notific
     ? 'bg-blue-100 text-blue-600 hover:bg-blue-200' 
     : 'bg-slate-200 text-slate-500 hover:bg-slate-300'
 
+  const handleTest = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    new Notification('🔔 Teste de Notificação', {
+      body: 'Se você está vendo isso, suas notificações estão funcionando corretamente!',
+    })
+    toast.success('Notificação de teste enviada!')
+  }
+
   return (
-    <button
-      onClick={handleToggle}
-      className={`${baseClasses} ${variant === 'dark' ? darkClasses : lightClasses} ${className}`}
-      title={isGranted ? "Notificações ativas" : "Ativar notificações de check-out"}
-    >
-      {isGranted ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
-    </button>
+    <div className="flex gap-2">
+      <button
+        onClick={handleToggle}
+        className={`${baseClasses} ${variant === 'dark' ? darkClasses : lightClasses} ${className}`}
+        title={isGranted ? "Notificações ativas" : "Ativar notificações de check-out"}
+      >
+        {isGranted ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+      </button>
+      
+      {isGranted && (
+        <button
+          onClick={handleTest}
+          className={`${baseClasses} ${variant === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-slate-200 text-slate-600'} hover:opacity-80`}
+          title="Testar envio de notificação agora"
+        >
+          <span className="text-xs font-bold px-1">TESTAR</span>
+        </button>
+      )}
+    </div>
   )
 }

@@ -75,9 +75,27 @@ export const useNotification = () => {
     return () => clearInterval(interval)
   }, [activeCheckin, permission])
 
+  const notifyCheckin = (clientName: string) => {
+    sendNotification('✅ Check-in Realizado!', {
+      body: `Você iniciou o atendimento em: ${clientName}`,
+      icon: '/logo.png', // Fallback icon
+      tag: 'checkin-start'
+    })
+  }
+
+  const notifyCheckout = (hours: string) => {
+    sendNotification('👋 Check-out Concluído', {
+      body: `Atendimento finalizado. Duração total: ${hours}`,
+      icon: '/logo.png',
+      tag: 'checkin-end'
+    })
+  }
+
   return {
     permission,
     requestPermission,
-    sendNotification
+    sendNotification,
+    notifyCheckin,
+    notifyCheckout
   }
 }

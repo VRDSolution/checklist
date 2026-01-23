@@ -13,6 +13,7 @@ import { useStartCheckin, useStopCheckin } from '../../hooks/useCheckins'
 import { sprintService } from '../../services/sprint.service'
 import { Sprint, SprintTask } from '../../types/sprint.types'
 import { useGeoLocation } from '../../hooks/useGeoLocation'
+import { useNotification } from '../../hooks/useNotification'
 import toast from 'react-hot-toast'
 
 interface WorkflowScreenProps {
@@ -37,6 +38,7 @@ export const WorkflowScreen = ({
   
   const selectedProject = fetchedProject || propProject
   const { getCurrentLocation } = useGeoLocation()
+  const { notifyCheckin, notifyCheckout } = useNotification()
 
   // Internal state if props are not provided
   const [internalStep, setInternalStep] = useState<'idle' | 'arrived' | 'working' | 'checkout'>('idle')
@@ -188,6 +190,7 @@ export const WorkflowScreen = ({
         // Do NOT clear local state yet, we need arrival time for display
         // localStorage.removeItem(`workflow_state_${selectedProject.id}`)
         toast.success('Check-in iniciado!')
+        notifyCheckin(selectedProject.name)
       } catch (error) {
         toast.error('Erro ao iniciar check-in')
       }
@@ -233,7 +236,12 @@ export const WorkflowScreen = ({
       // Now we can clear the local state
       localStorage.removeItem(`workflow_state_${selectedProject.id}`)
       
+      const startTime = new Date(activeCheckin.startTime).getTime()
+      const endTime = new Date(timestamps.end).getTime()
+      const durationHours = ((endTime - startTime) / (1000 * 60 * 60)).toFixed(2) + 'h'
+      
       toast.success('Check-in finalizado com sucesso!')
+      notifyCheckout(durationHours)
       await refreshData() // Refresh history
       navigate('/menu')
     } catch (error) {
