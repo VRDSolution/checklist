@@ -236,7 +236,7 @@ export const WorkflowScreen = ({
       // Now we can clear the local state
       localStorage.removeItem(`workflow_state_${selectedProject.id}`)
       
-      const startTime = new Date(activeCheckin.startTime).getTime()
+      const startTime = activeCheckin.startTime ? new Date(activeCheckin.startTime).getTime() : Date.now()
       const endTime = new Date(timestamps.end).getTime()
       const durationHours = ((endTime - startTime) / (1000 * 60 * 60)).toFixed(2) + 'h'
       
