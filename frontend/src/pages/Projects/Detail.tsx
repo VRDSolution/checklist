@@ -200,7 +200,7 @@ export const ProjectDetailScreen = ({
 
       // Only send status if it changed
       if (tempStatus !== selectedProject.status) {
-        updates.status = statusMap[tempStatus] || tempStatus
+        updates.status = statusMap[tempStatus] || tempStatus.toLowerCase().replace(' ', '_')
       }
 
       await updateProject.mutateAsync({
@@ -208,8 +208,11 @@ export const ProjectDetailScreen = ({
         updates: updates
       })
       setIsEditingName(false)
-    } catch (error) {
+      toast.success('Projeto atualizado com sucesso')
+    } catch (error: any) {
       console.error('Failed to update project', error)
+      const msg = error.response?.data?.detail || 'Erro ao atualizar projeto'
+      toast.error(typeof msg === 'string' ? msg : JSON.stringify(msg))
     }
   }
 
@@ -450,7 +453,14 @@ const handleExportCSV = () => {
           <Card key={c.id} className="p-5 print:break-inside-avoid">
             <div className="flex justify-between items-start mb-3">
               <div>
-                <p className="font-bold text-slate-800">{new Date(c.date).toLocaleDateString()}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-bold text-slate-800">{new Date(c.date).toLocaleDateString()}</p>
+                  {c.userName && (
+                    <span className="text-xs bg-slate-100 px-2 py-0.5 rounded-full text-slate-600 border border-slate-200">
+                      {c.userName}
+                    </span>
+                  )}
+                </div>
                 <div className="text-sm text-slate-500">
                   {c.arrivalTime && (
                     <p className="text-xs text-slate-400 mb-0.5">

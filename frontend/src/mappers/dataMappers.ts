@@ -91,6 +91,7 @@ export class CheckinMapper {
       observations,
       date: apiCheckin.created_at,
       userEmail: apiCheckin.user?.email || '',
+      userName: apiCheckin.user?.name || 'Técnico',
       startLocation: apiCheckin.start_lat && apiCheckin.start_lon ? { lat: apiCheckin.start_lat, lng: apiCheckin.start_lon } : undefined,
       endLocation: apiCheckin.end_lat && apiCheckin.end_lon ? { lat: apiCheckin.end_lat, lng: apiCheckin.end_lon } : undefined,
       isAutoCheckout: typeof apiCheckin.is_auto_checkout === 'number' ? apiCheckin.is_auto_checkout === 1 : !!apiCheckin.is_auto_checkout
