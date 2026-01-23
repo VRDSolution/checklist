@@ -460,9 +460,7 @@ const handleExportCSV = () => {
               <div>
                 <div>
                   <p className="font-bold text-slate-800">{new Date(c.date).toLocaleDateString()}</p>
-                  {c.userName && (
-                    <p className="text-xs text-slate-500">{c.userName}</p>
-                  )}
+                  
                 </div>
                 <div className="text-sm text-slate-500">
                   {c.arrivalTime && (
@@ -473,6 +471,11 @@ const handleExportCSV = () => {
                   <p>
                     {c.startTime && new Date(c.startTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} - {c.endTime && new Date(c.endTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
                   </p>
+                </div>
+                <div>
+                  {c.userName && (
+                    <p className="text-xs text-slate-500">{c.userName}</p>
+                  )}
                 </div>
               </div>
               <div className="text-right">
