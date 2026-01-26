@@ -1,310 +1,128 @@
-# Check-in System - Backend API
+# ⚙️ Backend - Sistema de Check-in API
 
-Sistema completo de Check-in/Check-out para técnicos com FastAPI, PostgreSQL e Redis.
+O backend é uma API RESTful robusta desenvolvida com **FastAPI (Python)**, **SQLAlchemy** e **MySQL**.
 
-## 🚀 Tecnologias
+## 📂 Estrutura de Pastas e Módulos
 
+A lógica da aplicação reside na pasta `app/`. Aqui estão os principais módulos para manutenção:
+
+- **`app/api/v1/`**: Endpoints (Rotas) da API. Organizados por recursos (auth, users, projects).
+- **`app/models/`**: Modelos do Banco de Dados (Classes SQLAlchemy). Define as tabelas.
+- **`app/schemas/`**: Schemas Pydantic. Define a validação de entrada/saída (DTOs).
+- **`app/services/`**: Regras de Negócio. A lógica pesada deve ficar aqui, não nas rotas.
+- **`app/core/`**: Configurações globais (`config.py`), segurança (`security.py`) e conexão DB.
+- **`app/alembic/` (ou `api/alembic`)**: Scripts de migração de banco de dados.
+
+---
+
+## 💻 Como Rodar Localmente
+
+### Pré-requisitos
 - **Python 3.11+**
-- **FastAPI** - Framework web moderno
-- **SQLAlchemy 2.0** - ORM
-- **PostgreSQL 15** - Banco de dados
-- **Redis** - Cache e sessões
-- **Alembic** - Migrations
-- **JWT** - Autenticação
-- **Docker** - Containerização
+- **MySQL** instalado e rodando. 
 
-## 📋 Funcionalidades
+### Passo a Passo
 
-- ✅ **Autenticação JWT** com roles (Admin, Supervisor, Técnico)
-- ✅ **CRUD completo** de Usuários, Clientes, Projetos e Tarefas
-- ✅ **Sistema de Check-in/Check-out** com cronômetro automático
-- ✅ **Upload de anexos** com validação de tipos
-- ✅ **Auditoria completa** de todas as operações
-- ✅ **API documentada** com Swagger/OpenAPI
-- ✅ **Pagination** e filtros avançados
-- ✅ **Soft delete** para preservação de dados
-- ✅ **Docker ready** para produção
+1. **Crie um ambiente virtual (recomendado):**
+   ```bash
+   python -m venv venv
+   # Windows
+   .\venv\Scripts\activate
+   # Linux/Mac
+   source venv/bin/activate
+   ```
 
-## 🛠️ Setup de Desenvolvimento
+2. **Instale as dependências:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### 1. Com Docker (Recomendado)
+3. **Configure as Variáveis de Ambiente:**
+   Duplique `.env.example` para `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   Edite o `.env` com as credenciais do seu banco MySQL local:
+   ```env
+   # Exemplo para MySQL
+   DATABASE_URL=mysql+pymysql://root:senha@localhost:3306/checkinsys_db
+   SECRET_KEY=sua_chave_secreta_aqui
+   ```
 
+4. **Configurar o Banco de Dados:**
+   - Crie o banco no MySQL: `CREATE DATABASE checkinsys_db;`
+   - Execute as migrações:
+     ```bash
+     alembic upgrade head
+     ```
+   - Popule com dados iniciais (admin/users):
+     ```bash
+     python app/scripts/seed.py
+     ```
+
+5. **Inicie o Servidor:**
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+   - API Docs: `http://localhost:8000/docs`
+
+---
+
+## ☁️ Como Rodar Online (Deploy)
+ - phpMyAdmin)
+
+Para configurar o banco MySQL na KingHost que já utilizamos no projeto:
+
+1. **Acesse o Painel de Controle KingHost.**
+2. Vá em **"Gerenciar Bancos de Dados"** (MySQL).
+3. Utilize o **phpMyAdmin** para visualizar e gerenciar o banco.
+4. Anote o **Host** (geralmente `mysql.dominiocliente.com.br`), **Usuário** e **Nome do Banco**.
+5. **Connection String:**
+   A URL para o seu `.env` de produção será:
+   ```
+   DATABASE_URL=mysql+pymysql://usuario_king:senha_king@host_kinghost:3306
+   DATABASE_URL=postgresql://usuario_king:senha_king@host_kinghost:5432/nome_banco_king
+   ```
+
+### 2. Deploy da Aplicação (VPS / Cloud)
+
+Como o backend é Python/FastAPI, recomenda-se hospedar em um serviço que suporte Docker ou Python (Ex: DigitalOcean Droplet, Railway, Render, ou VPS KingHost).
+
+**Variáveis de Produção (Environment Variables):**
+No servidor de produção, configure:
+- `ENVIRONMENT=production`
+- `DEBUG=False`
+- `DATABASE_URL` (Sua string de conexão da KingHost acima)
+- `SECRET_KEY` (Gere uma chave forte e única)
+- `CORS_ORIGINS` (A URL do seu frontend Vercel, ex: `https://checklist-app.vercel.app`)
+
+**Comando de Start (Produção):**
+Não use `--reload`. Use `gunicorn` com `uvicorn` workers ou apenas `uvicorn` em modo produção:
 ```bash
-# Clone o repositório
-git clone <repository-url>
-cd checklist/backend
-
-# Inicie os serviços
-docker-compose up -d
-
-# Execute as migrations
-docker-compose exec backend alembic upgrade head
-
-# Execute o seed de dados
-docker-compose exec backend python app/scripts/seed.py
-
-# API estará disponível em: http://localhost:8000
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
-### 2. Setup Local
-
+**Rodando Migrations em Produção:**
+Sempre que atualizar o código, rode as migrations no banco de produção:
 ```bash
-# Instalar dependências
-pip install -r requirements.txt
-
-# Configurar variáveis de ambiente
-cp .env.example .env
-# Edite o arquivo .env conforme necessário
-
-# Criar banco de dados PostgreSQL
-createdb checkinsys_db
-
-# Executar migrations
-alembic upgrade head
-
-# Executar seed de dados
-python app/scripts/seed.py
-
-# Iniciar servidor de desenvolvimento
-uvicorn app.main:app --reload --port 8000
-```
-
-## 🗄️ Banco de Dados
-
-### Migrations
-
-```bash
-# Criar nova migration
-alembic revision --autogenerate -m "Descrição da migration"
-
-# Aplicar migrations
-alembic upgrade head
-
-# Reverter migration
-alembic downgrade -1
-```
-
-### Seed Data
-
-O script de seed cria:
-
-- **Usuários padrão** com diferentes roles
-- **Categorias de tarefas** (Configuração, Manutenção, etc.)
-- **Tarefas** pré-cadastradas por categoria
-- **Clientes** de exemplo
-- **Projetos** de teste
-
-
-## 📚 API Documentation
-
-Acesse a documentação interativa:
-
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **OpenAPI JSON**: http://localhost:8000/api/v1/openapi.json
-
-## 🔐 Autenticação
-
-### Login
-
-```bash
-POST /api/v1/auth/login
-Content-Type: application/json
-
-{
-  "email": "arthur@vrdsolution.com",
-  "senha": "Arthur@123"
-}
-```
-
-### Uso do Token
-
-```bash
-Authorization: Bearer <jwt_token>
-```
-
-## 📊 Endpoints Principais
-
-### 🔐 Auth
-- `POST /api/v1/auth/login` - Login
-- `POST /api/v1/auth/refresh` - Refresh token
-- `GET /api/v1/auth/me` - Info do usuário logado
-- `POST /api/v1/auth/logout` - Logout
-
-### ⏱️ Check-ins (CORE)
-- `POST /api/v1/checkins/start` - Iniciar check-in
-- `POST /api/v1/checkins/{id}/end` - Finalizar check-in
-- `GET /api/v1/checkins` - Listar check-ins
-- `GET /api/v1/checkins/active` - Check-in ativo do usuário
-- `GET /api/v1/checkins/{id}` - Detalhes do check-in
-
-### 👥 Usuários
-- `GET /api/v1/users` - Listar usuários
-- `POST /api/v1/users` - Criar usuário (admin only)
-- `GET /api/v1/users/{id}` - Detalhes do usuário
-- `PUT /api/v1/users/{id}` - Atualizar usuário
-- `DELETE /api/v1/users/{id}` - Deletar usuário (soft)
-
-### 🏢 Clientes
-- `GET /api/v1/clients` - Listar clientes
-- `POST /api/v1/clients` - Criar cliente
-- `GET /api/v1/clients/{id}` - Detalhes do cliente
-- `PUT /api/v1/clients/{id}` - Atualizar cliente
-
-### 📁 Projetos
-- `GET /api/v1/projects` - Listar projetos
-- `POST /api/v1/projects` - Criar projeto
-- `GET /api/v1/projects/{id}` - Detalhes do projeto
-- `PUT /api/v1/projects/{id}` - Atualizar projeto
-
-### ✅ Tarefas
-- `GET /api/v1/tasks` - Listar tarefas
-- `POST /api/v1/tasks` - Criar tarefa
-- `GET /api/v1/task-categories` - Listar categorias
-
-## 🔄 Fluxo de Check-in
-
-### 1. Iniciar Check-in
-
-```json
-POST /api/v1/checkins/start
-{
-  "projeto_id": 1,
-  "localizacao_inicio": "Cliente ABC - Sala de máquinas"
-}
-```
-
-### 2. Finalizar Check-in
-
-```json
-POST /api/v1/checkins/1/end
-{
-  "tarefas_executadas": [
-    {
-      "tarefa_id": 1,
-      "observacao_tarefa": "Configuração realizada com sucesso"
-    },
-    {
-      "tarefa_id": 3,
-      "observacao_tarefa": "Limpeza completa dos equipamentos"
-    }
-  ],
-  "observacoes": "Cliente satisfeito com o atendimento",
-  "localizacao_fim": "Cliente ABC - Concluído"
-}
-```
-
-### 3. Resultado
-
-O sistema calcula automaticamente:
-- ⏰ **Duração** em minutos e formato HH:MM
-- 📅 **Data/hora fim** do check-out
-- 📊 **Status** atualizado para "concluido"
-
-## 🛡️ Segurança
-
-### Roles e Permissões
-
-| Role | Permissões |
-|------|------------|
-| **Admin** | Acesso total, gerenciar usuários, ver todos os projetos |
-| **Supervisor** | Ver todos os projetos, editar projetos, relatórios |
-| **Técnico** | Ver próprios checkins, projetos alocados, fazer check-in/out |
-
-### Validações
-
-- ✅ **Email único** e formato válido
-- ✅ **CNPJ válido** com algoritmo de validação
-- ✅ **Senha forte** com mínimo 6 caracteres
-- ✅ **Datas consistentes** (fim >= início)
-- ✅ **Tipos de arquivo** validados para anexos
-- ✅ **Tamanho máximo** de 10MB para arquivos
-
-## 🧪 Testes
-
-```bash
-# Executar todos os testes
-pytest
-
-# Testes com cobertura
-pytest --cov=app --cov-report=html
-
-# Testes específicos
-pytest app/tests/test_auth.py
-```
-
-## 📁 Estrutura do Projeto
-
-```
-backend/
-├─ app/
-│  ├─ api/v1/          # Endpoints REST
-│  ├─ core/            # Config, security, database
-│  ├─ models/          # SQLAlchemy models
-│  ├─ schemas/         # Pydantic schemas
-│  ├─ services/        # Business logic
-│  ├─ scripts/         # Seed e utilitários
-│  └─ tests/           # Testes automatizados
-├─ alembic/            # Database migrations
-├─ uploads/            # Arquivos uploadados
-├─ docker-compose.yml  # Orquestração Docker
-├─ Dockerfile          # Container da aplicação
-└─ requirements.txt    # Dependências Python
-```
-
-## 🐛 Troubleshooting
-
-### Problemas Comuns
-
-**1. Erro de conexão com banco:**
-```bash
-# Verificar se PostgreSQL está rodando
-docker-compose ps
-
-# Ver logs do banco
-docker-compose logs db
-```
-
-**2. Migration com erro:**
-```bash
-# Resetar migrations (CUIDADO: perde dados!)
-alembic downgrade base
 alembic upgrade head
 ```
 
-**3. Permissão negada:**
-```bash
-# Verificar token JWT
-curl -H "Authorization: Bearer <token>" http://localhost:8000/api/v1/auth/me
-```
+---
 
-## 🚀 Deploy para Produção
+## 🛠️ Boas Práticas e Manutenção
 
-### Variáveis de Ambiente
+- **Adicionar Novos Campos/Tabelas:**
+  1. Modifique/Crie o modelo em `app/models/`.
+  2. Gere uma nova migração: `alembic revision --autogenerate -m "descricao_da_mudanca"`.
+  3. Verifique o arquivo gerado em `alembic/versions/`.
+  4. Aplique: `alembic upgrade head`.
 
-```bash
-DATABASE_URL=postgresql://user:pass@host:5432/db
-SECRET_KEY=sua-chave-secreta-super-forte-aqui
-ENVIRONMENT=production
-DEBUG=False
-ALLOWED_ORIGINS=["https://yourfrontend.com"]
-```
+- **Logs e Monitoramento:**
+  - Em produção, erros são logados na saída padrão (stdout). Use ferramentas como Sentry para monitorar erros em tempo real.
 
-### Com Docker
+- **Atualizar Dependências:**
+  - Se instalar novas libs (`pip install pacote`), lembre-se de atualizar o requirements: `pip freeze > requirements.txt`.
 
-```bash
-# Build para produção
-docker build -t checkinsys-api .
-
-# Run em produção
-docker run -p 8000:8000 --env-file .env checkinsys-api
-```
-
-## 📞 Suporte
-
-Para dúvidas ou problemas:
-
-1. Verificar a documentação da API em `/docs`
-2. Consultar logs: `docker-compose logs backend`
-3. Verificar issues no GitHub
-4. Contatar equipe de desenvolvimento
+- **API Docs:**
+  - A documentação `/docs` é gerada automaticamente. Mantenha os Schemas (`app/schemas`) bem descritos para que a documentação seja útil.
