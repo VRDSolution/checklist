@@ -192,9 +192,36 @@ class ClientService {
     const response = await api.post('/clients/', data)
     return response.data
   }
+
+  async update(id: number | string, data: any): Promise<Client> {
+    const response = await api.put(`/clients/${id}`, data)
+    return response.data
+  }
+
+  async delete(id: number | string): Promise<void> {
+    await api.delete(`/clients/${id}`)
+  }
 }
 
 class UserService {
+  async getAll(): Promise<any[]> {
+    const response = await api.get('/users/')
+    return response.data
+  }
+
+  async create(data: { name: string, email: string, password: string, role: string }): Promise<any> {
+    const response = await api.post('/users/', data)
+    return response.data
+  }
+
+  async delete(id: number | string): Promise<void> {
+    await api.delete(`/users/${id}`)
+  }
+
+  async updatePassword(id: number | string, data: { new_password: string }): Promise<void> {
+    await api.put(`/users/${id}/password`, data)
+  }
+
   async search(query: string): Promise<{ id: number, label: string, subLabel: string }[]> {
     const response = await api.get('/users/search', { params: { q: query } })
     return response.data.map((u: any) => ({ id: u.id, label: u.name, subLabel: u.email }))

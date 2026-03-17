@@ -11,6 +11,7 @@ import { HistoryScreen } from './HistoryScreen'
 import { ProjectDetailScreen } from './ProjectDetailScreen'
 import { SuccessScreen } from './SuccessScreen'
 import { UserRegistrationScreen } from './admin/UserRegistrationScreen'
+import { RegistrationsScreen } from './admin/RegistrationsScreen'
 import { SprintsScreen } from './sprints/SprintsScreen'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 
@@ -55,7 +56,17 @@ const MobileAppContent = () => {
               else if (screen === 'addProject') navigate('/projects/new')
               else if (screen === 'history') navigate('/history')
               else if (screen === 'addUser') navigate('/admin/users/new')
+              else if (screen === 'registrations') navigate('/admin/registrations')
             }} />
+          </Private>
+        )}
+      />
+
+      <Route
+        path="/admin/registrations"
+        element={(
+          <Private>
+            <RegistrationsScreen />
           </Private>
         )}
       />

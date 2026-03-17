@@ -49,3 +49,13 @@ class Client(Base):
     def is_active(self) -> bool:
         """Check if client is active."""
         return self.ativo == 1 and self.deleted_at is None
+
+    @property
+    def projects_count(self) -> int:
+        """Count active linked projects."""
+        return len([projeto for projeto in self.projetos if projeto.deleted_at is None])
+
+    @property
+    def has_projects(self) -> bool:
+        """Indicates whether client has linked active projects."""
+        return self.projects_count > 0

@@ -48,3 +48,4 @@ export type Screen =
   | 'projectDetail' 
   | 'success'
   | 'addUser'
+  | 'registrations'

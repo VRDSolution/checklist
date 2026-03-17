@@ -103,13 +103,13 @@ export const DashboardScreen = ({ onNavigate }: DashboardScreenProps) => {
         )}
 
         {user?.role === 'admin' && (
-          <Card onClick={() => onNavigate('addUser')} className="p-8 flex flex-col items-center text-center gap-4 hover:border-purple-500 group">
+          <Card onClick={() => onNavigate('registrations')} className="p-8 flex flex-col items-center text-center gap-4 hover:border-purple-500 group">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-600 transition-colors">
               <UserPlus className="text-purple-600 group-hover:text-white w-8 h-8" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-800">Cadastrar Usuário</h2>
-              <p className="text-slate-500">Adicionar novo membro à equipe</p>
+              <h2 className="text-xl font-bold text-slate-800">Cadastros</h2>
+              <p className="text-slate-500">Gerenciar empresas e usuários</p>
             </div>
           </Card>
         )}

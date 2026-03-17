@@ -15,6 +15,7 @@ import { SuccessScreen as Success } from './pages/Checkin/Success'
 import { UserRegistrationScreen } from './pages/admin/UserRegistrationScreen'
 import { SprintsScreen } from './pages/sprints/SprintsScreen'
 import { AnalyticsDashboard } from './pages/admin/AnalyticsDashboard'
+import { RegistrationsScreen } from './pages/admin/RegistrationsScreen'
 
 export const AppRoutes = () => {
   const { isAuthenticated, user } = useAuth()
@@ -58,7 +59,17 @@ export const AppRoutes = () => {
               else if (screen === 'addProject') navigate('/projects/new')
               else if (screen === 'history') navigate('/history')
               else if (screen === 'addUser') navigate('/admin/users/new')
+              else if (screen === 'registrations') navigate('/admin/registrations')
             }} />
+          </Private>
+        )}
+      />
+
+      <Route
+        path="/admin/registrations"
+        element={(
+          <Private>
+            <RegistrationsScreen />
           </Private>
         )}
       />

@@ -6,11 +6,11 @@ import logging
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.schemas.client import ClientCreate, ClientResponse
+from app.schemas.client import ClientCreate, ClientResponse, ClientUpdate
 from app.schemas.common import SearchItemResponse
 from app.services.client_service import ClientService
 from app.infrastructure.repositories.sqlalchemy_client_repository import SQLAlchemyClientRepository
-from app.api.deps import get_current_active_user
+from app.api.deps import get_current_active_user, require_admin
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -50,3 +50,22 @@ def list_clients(
     current_user = Depends(get_current_active_user)
 ):
     return service.get_all_clients(skip, limit)
+
+
+@router.put("/{client_id}", response_model=ClientResponse)
+def update_client(
+    client_id: int,
+    client_data: ClientUpdate,
+    service: ClientService = Depends(get_client_service),
+    current_user = Depends(require_admin)
+):
+    return service.update_client(client_id, client_data)
+
+
+@router.delete("/{client_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_client(
+    client_id: int,
+    service: ClientService = Depends(get_client_service),
+    current_user = Depends(require_admin)
+):
+    service.delete_client(client_id)

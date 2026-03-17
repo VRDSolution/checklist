@@ -30,3 +30,30 @@ class UserService:
         )
         
         return self.repository.create(user)
+
+    def get_all_users(self, skip: int = 0, limit: int = 100) -> List[User]:
+        return self.repository.get_all(skip, limit)
+
+    def get_user_by_id(self, user_id: int) -> User:
+        user = self.repository.get_by_id(user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuário não encontrado"
+            )
+        return user
+
+    def update_user_password(self, user_id: int, new_password: str) -> User:
+        user = self.get_user_by_id(user_id)
+        user.hashed_password = hash_password(new_password)
+        return self.repository.update(user)
+
+    def delete_user(self, user_id: int, current_user_id: int) -> None:
+        if user_id == current_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Não é permitido excluir o próprio usuário"
+            )
+
+        user = self.get_user_by_id(user_id)
+        self.repository.soft_delete(user)

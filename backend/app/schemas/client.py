@@ -22,8 +22,12 @@ class ClientCreate(ClientBase):
 class ClientUpdate(BaseModel):
     name: Optional[str] = Field(None, alias="nome")
     cnpj: Optional[str] = None
+    phone: Optional[str] = Field(None, alias="telefone")
+    email: Optional[str] = None
+    address: Optional[str] = Field(None, alias="endereco")
     city: Optional[str] = Field(None, alias="cidade")
     state: Optional[str] = Field(None, alias="estado")
+    zip_code: Optional[str] = Field(None, alias="cep")
 
     class Config:
         populate_by_name = True
@@ -42,6 +46,8 @@ class ClientResponse(BaseModel):
     city: str = Field(validation_alias="cidade", serialization_alias="city")
     state: str = Field(validation_alias="estado", serialization_alias="state")
     zip_code: Optional[str] = Field(None, validation_alias="cep", serialization_alias="zip_code")
+    projects_count: int = Field(0, validation_alias="projects_count", serialization_alias="projects_count")
+    has_projects: bool = Field(False, validation_alias="has_projects", serialization_alias="has_projects")
     created_at: datetime
     updated_at: Optional[datetime] = None
 

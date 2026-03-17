@@ -56,6 +56,22 @@ class UserPasswordUpdate(BaseModel):
         return v
 
 
+class UserAdminPasswordUpdate(BaseModel):
+    """Schema for admin updating another user's password."""
+    new_password: str = Field(..., min_length=8, max_length=50, description="New password")
+
+    @field_validator('new_password')
+    @classmethod
+    def validate_password_complexity(cls, v: str) -> str:
+        if not re.search(r"\d", v):
+            raise ValueError("A senha deve conter pelo menos um número")
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("A senha deve conter pelo menos uma letra maiúscula")
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
+            raise ValueError("A senha deve conter pelo menos um caractere especial")
+        return v
+
+
 class UserResponse(UserBase):
     """Schema for user response."""
     model_config = ConfigDict(from_attributes=True)

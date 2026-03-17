@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/checklist/dev-sw.js?dev-sw', { scope: '/checklist/', type: 'classic' })
