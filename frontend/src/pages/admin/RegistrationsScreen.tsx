@@ -103,6 +103,36 @@ const toClientFormData = (client: ClientListItem): ClientFormData => ({
   cep: client.zip_code || client.cep || ''
 })
 
+const getApiErrorMessage = (error: any, fallback: string) => {
+  const detail = error?.response?.data?.detail
+
+  if (typeof detail === 'string') {
+    return detail
+  }
+
+  if (Array.isArray(detail)) {
+    const first = detail[0]
+    if (typeof first === 'string') {
+      return first
+    }
+
+    if (first?.msg) {
+      return first.msg
+    }
+
+    return fallback
+  }
+
+  if (detail && typeof detail === 'object') {
+    if (detail.msg) {
+      return detail.msg
+    }
+    return JSON.stringify(detail)
+  }
+
+  return fallback
+}
+
 export const RegistrationsScreen = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -141,7 +171,7 @@ export const RegistrationsScreen = () => {
       setClients(clientsResponse as ClientListItem[])
       setUsers(usersResponse as UserListItem[])
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erro ao carregar cadastros'
+      const message = getApiErrorMessage(error, 'Erro ao carregar cadastros')
       toast.error(message)
     } finally {
       setIsLoading(false)
@@ -188,7 +218,7 @@ export const RegistrationsScreen = () => {
       setEditingClient(null)
       await loadData()
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erro ao salvar empresa'
+      const message = getApiErrorMessage(error, 'Erro ao salvar empresa')
       toast.error(message)
     } finally {
       setIsLoading(false)
@@ -214,7 +244,7 @@ export const RegistrationsScreen = () => {
       toast.success('Empresa excluída com sucesso!')
       await loadData()
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erro ao excluir empresa'
+      const message = getApiErrorMessage(error, 'Erro ao excluir empresa')
       toast.error(message)
     } finally {
       setIsLoading(false)
@@ -234,6 +264,26 @@ export const RegistrationsScreen = () => {
       return
     }
 
+    if (userForm.password.length < 8) {
+      toast.error('A senha deve ter no mínimo 8 caracteres')
+      return
+    }
+
+    if (!/[A-Z]/.test(userForm.password)) {
+      toast.error('A senha deve conter pelo menos uma letra maiúscula')
+      return
+    }
+
+    if (!/\d/.test(userForm.password)) {
+      toast.error('A senha deve conter pelo menos um número')
+      return
+    }
+
+    if (!/[!@#$%^&*(),.?\":{}|<>]/.test(userForm.password)) {
+      toast.error('A senha deve conter pelo menos um caractere especial')
+      return
+    }
+
     setIsLoading(true)
     try {
       await userService.create({
@@ -247,7 +297,7 @@ export const RegistrationsScreen = () => {
       setUserForm(defaultUserCreateForm)
       await loadData()
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erro ao cadastrar usuário'
+      const message = getApiErrorMessage(error, 'Erro ao cadastrar usuário')
       toast.error(message)
     } finally {
       setIsLoading(false)
@@ -265,7 +315,7 @@ export const RegistrationsScreen = () => {
       toast.success('Usuário excluído com sucesso!')
       await loadData()
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erro ao excluir usuário'
+      const message = getApiErrorMessage(error, 'Erro ao excluir usuário')
       toast.error(message)
     } finally {
       setIsLoading(false)
@@ -300,7 +350,7 @@ export const RegistrationsScreen = () => {
       setSelectedUser(null)
       setPasswordForm(defaultPasswordForm)
     } catch (error: any) {
-      const message = error.response?.data?.detail || 'Erro ao atualizar senha'
+      const message = getApiErrorMessage(error, 'Erro ao atualizar senha')
       toast.error(message)
     } finally {
       setIsLoading(false)
@@ -343,9 +393,13 @@ export const RegistrationsScreen = () => {
               <h2 className="text-lg font-bold text-slate-800">Empresas</h2>
               <p className="text-sm text-slate-500">{clientsLabel}</p>
             </div>
-            <Button className="w-auto px-5 py-2 text-sm" onClick={openNewClientModal} icon={Plus}>
-              Nova Empresa
-            </Button>
+            <button
+              type="button"
+              onClick={openNewClientModal}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-900 text-white hover:bg-blue-800"
+            >
+              <Plus size={14} /> Nova Empresa
+            </button>
           </div>
 
           <div className="overflow-x-auto">
@@ -419,9 +473,13 @@ export const RegistrationsScreen = () => {
               <h2 className="text-lg font-bold text-slate-800">Usuários</h2>
               <p className="text-sm text-slate-500">{usersLabel}</p>
             </div>
-            <Button className="w-auto px-5 py-2 text-sm" onClick={openCreateUserModal} icon={UserPlus}>
-              Novo Usuário
-            </Button>
+            <button
+              type="button"
+              onClick={openCreateUserModal}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-900 text-white hover:bg-blue-800"
+            >
+              <UserPlus size={14} /> Novo Usuário
+            </button>
           </div>
 
           <div className="overflow-x-auto">
@@ -517,6 +575,9 @@ export const RegistrationsScreen = () => {
               required
             />
           </div>
+          <p className="text-xs text-slate-500">
+            A senha deve ter mínimo de 8 caracteres, 1 letra maiúscula, 1 número e 1 caractere especial.
+          </p>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Perfil de Acesso</label>
             <select
