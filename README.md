@@ -1,4 +1,4 @@
-# 📋 Sistema de Check-in/Check-out - VRD Solution
+# 📋 Sistema de Check-in/Check-out - VRD Solution Ltda.
 
 Sistema completo de controle de tempo e atividades para técnicos, desenvolvido com **FastAPI + React + TypeScript**.
 
